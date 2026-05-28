@@ -118,5 +118,27 @@
       },
       "storyPoint": 5
     }
+  ],
+  "rules": {},
+  "projects": [
+    {
+      "properties": {
+        "repo": "ZavaLoanOriginationAPI",
+        "appName": "ZavaLoanOriginationAPI",
+        "languages": [
+          "Java"
+        ],
+        "frameworks": [
+          "Java EE / Jakarta EE",
+          "JDBC"
+        ],
+        "tools": [
+          "Gradle"
+        ],
+        "jdkVersion": "11",
+        "applicationType": "Web Application"
+      },
+      "incidents": []
+    }
   ]
 }

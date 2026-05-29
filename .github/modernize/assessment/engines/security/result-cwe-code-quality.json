@@ -1,0 +1,199 @@
+{
+  "input_name": "CWE - Code Quality",
+  "analysis_method": "LLM",
+  "status": "success",
+  "result": {
+    "finding": "Assessed 16 CWE rules in Code Quality: 7 FOUND, 9 NOT_FOUND",
+    "confidence": "high",
+    "evidence": ["Scanned application source files for code quality patterns"],
+    "values": [
+      {
+        "id": "CWE-130",
+        "name": "Improper Handling of Length Parameter Inconsistency",
+        "status": "NOT_FOUND",
+        "category": "Code Quality",
+        "severity": "potential",
+        "storyPoint": 3,
+        "description": "The product parses a formatted message or structure, but it does not handle or incorrectly handles a length field that is inconsistent with the actual length of the associated data.",
+        "evidence": { "files": [], "explanation": "" }
+      },
+      {
+        "id": "CWE-456",
+        "name": "Missing Initialization of a Variable",
+        "status": "NOT_FOUND",
+        "category": "Code Quality",
+        "severity": "potential",
+        "storyPoint": 2,
+        "description": "The product does not initialize critical variables, which causes the execution environment to use unexpected values.",
+        "evidence": { "files": [], "explanation": "" }
+      },
+      {
+        "id": "CWE-457",
+        "name": "Use of Uninitialized Variable",
+        "status": "NOT_FOUND",
+        "category": "Code Quality",
+        "severity": "potential",
+        "storyPoint": 2,
+        "description": "The code uses a variable that has not been initialized, leading to unpredictable or unintended results.",
+        "evidence": { "files": [], "explanation": "" }
+      },
+      {
+        "id": "CWE-477",
+        "name": "Use of Obsolete Function",
+        "status": "FOUND",
+        "category": "Code Quality",
+        "severity": "optional",
+        "storyPoint": 1,
+        "description": "The code uses deprecated or obsolete functions, which suggests that the code has not been actively reviewed or maintained.",
+        "evidence": {
+          "files": ["src/main/java/com/zavabank/loanorigination/LoanConnectionFactory.java"],
+          "explanation": "LoanConnectionFactory (line 10) calls Class.forName(\"com.microsoft.sqlserver.jdbc.SQLServerDriver\") to explicitly load the JDBC driver. This pattern has been obsolete since JDBC 4.0 (Java 6+), which introduced automatic driver discovery via java.util.ServiceLoader. The explicit Class.forName() call is unnecessary and indicates the code has not been updated to reflect modern JDBC practices."
+        }
+      },
+      {
+        "id": "CWE-570",
+        "name": "Expression is Always False",
+        "status": "NOT_FOUND",
+        "category": "Code Quality",
+        "severity": "optional",
+        "storyPoint": 1,
+        "description": "The product contains an expression that will always evaluate to false.",
+        "evidence": { "files": [], "explanation": "" }
+      },
+      {
+        "id": "CWE-571",
+        "name": "Expression is Always True",
+        "status": "NOT_FOUND",
+        "category": "Code Quality",
+        "severity": "optional",
+        "storyPoint": 1,
+        "description": "The product contains an expression that will always evaluate to true.",
+        "evidence": { "files": [], "explanation": "" }
+      },
+      {
+        "id": "CWE-606",
+        "name": "Unchecked Input for Loop Condition",
+        "status": "FOUND",
+        "category": "Code Quality",
+        "severity": "potential",
+        "storyPoint": 3,
+        "description": "The product does not properly check inputs that are used for loop conditions, potentially leading to a denial of service or other consequences because of excessive looping.",
+        "evidence": {
+          "files": ["src/main/java/com/zavabank/loanorigination/LoanApplyServlet.java"],
+          "explanation": "The readBody() method (lines 296-305) reads the HTTP request body line by line in a while loop with no maximum size or iteration check. An attacker can send an arbitrarily large request body, causing the loop to run for an indeterminate amount of time and accumulating all content into a StringBuilder without bounds."
+        }
+      },
+      {
+        "id": "CWE-665",
+        "name": "Improper Initialization",
+        "status": "NOT_FOUND",
+        "category": "Code Quality",
+        "severity": "potential",
+        "storyPoint": 3,
+        "description": "The product does not initialize or incorrectly initializes a resource, which might leave the resource in an unexpected state when it is accessed or used.",
+        "evidence": { "files": [], "explanation": "" }
+      },
+      {
+        "id": "CWE-681",
+        "name": "Incorrect Conversion between Numeric Types",
+        "status": "FOUND",
+        "category": "Code Quality",
+        "severity": "potential",
+        "storyPoint": 3,
+        "description": "When converting from one data type to another, such as long to integer, data can be omitted or translated in a way that produces unexpected values. If the resulting values are used in a sensitive context, then dangerous behaviors may occur.",
+        "evidence": {
+          "files": ["src/main/java/com/zavabank/loanorigination/LoanApplyServlet.java"],
+          "explanation": "LoanApplyServlet.doPost() at line 37 converts the loan amount using new BigDecimal(payload.optDouble(\"requestedAmount\", 0d)). Constructing a BigDecimal from a double uses the exact binary floating-point representation, which can introduce rounding errors (e.g., 0.1 becomes 0.1000000000000000055511...). For a financial application handling loan amounts, this precision loss in a security-critical calculation path (used for approval decisions and ledger entries) is a meaningful concern."
+        }
+      },
+      {
+        "id": "CWE-682",
+        "name": "Incorrect Calculation",
+        "status": "NOT_FOUND",
+        "category": "Code Quality",
+        "severity": "potential",
+        "storyPoint": 5,
+        "description": "The product performs a calculation that generates incorrect or unintended results that are later used in security-critical decisions or resource management.",
+        "evidence": { "files": [], "explanation": "" }
+      },
+      {
+        "id": "CWE-772",
+        "name": "Missing Release of Resource after Effective Lifetime",
+        "status": "FOUND",
+        "category": "Code Quality",
+        "severity": "potential",
+        "storyPoint": 3,
+        "description": "The product does not release a resource after its effective lifetime has ended, i.e., after the resource is no longer needed.",
+        "evidence": {
+          "files": ["src/main/java/com/zavabank/loanorigination/LoanApplyServlet.java"],
+          "explanation": "In LoanApplyServlet.insertApplication() (lines 187-194), the finally block calls keys.close() (line 189) without a surrounding try-catch. If keys.close() throws a SQLException, statement.close() (line 192) is never executed, causing the PreparedStatement resource to leak for the duration of the connection's lifetime."
+        }
+      },
+      {
+        "id": "CWE-775",
+        "name": "Missing Release of File Descriptor or Handle after Effective Lifetime",
+        "status": "FOUND",
+        "category": "Code Quality",
+        "severity": "potential",
+        "storyPoint": 3,
+        "description": "The product does not release a file descriptor or handle after its effective lifetime has ended, i.e., after the file descriptor/handle is no longer needed.",
+        "evidence": {
+          "files": ["src/main/java/com/zavabank/loanorigination/LoanApplyServlet.java"],
+          "explanation": "In LoanApplyServlet.insertApplication() (lines 187-194), the PreparedStatement handle (statement) may not be closed if keys.close() (line 189) throws an exception first, since neither close() call is wrapped in its own try-catch within the finally block. The same pattern is absent from updateApplication() and insertDecision() which do wrap statement.close() in finally but without try-catch protection."
+        }
+      },
+      {
+        "id": "CWE-783",
+        "name": "Operator Precedence Logic Error",
+        "status": "NOT_FOUND",
+        "category": "Code Quality",
+        "severity": "optional",
+        "storyPoint": 1,
+        "description": "The product uses an expression in which operator precedence causes incorrect logic to be used.",
+        "evidence": { "files": [], "explanation": "" }
+      },
+      {
+        "id": "CWE-789",
+        "name": "Memory Allocation with Excessive Size Value",
+        "status": "FOUND",
+        "category": "Code Quality",
+        "severity": "potential",
+        "storyPoint": 5,
+        "description": "The product allocates memory based on an untrusted, large size value, but it does not ensure that the size is within expected limits, allowing arbitrary amounts of memory to be allocated.",
+        "evidence": {
+          "files": ["src/main/java/com/zavabank/loanorigination/LoanApplyServlet.java"],
+          "explanation": "The readBody() method (lines 296-305) appends every line of the HTTP request body into a single StringBuilder without any maximum size guard. An attacker can submit a request body of arbitrary size, causing the JVM heap to grow until an OutOfMemoryError is thrown or the server becomes unresponsive."
+        }
+      },
+      {
+        "id": "CWE-835",
+        "name": "Loop with Unreachable Exit Condition ('Infinite Loop')",
+        "status": "NOT_FOUND",
+        "category": "Code Quality",
+        "severity": "potential",
+        "storyPoint": 3,
+        "description": "The product contains an iteration or loop with an exit condition that cannot be reached, i.e., an infinite loop.",
+        "evidence": { "files": [], "explanation": "" }
+      },
+      {
+        "id": "CWE-1057",
+        "name": "Data Access Operations Outside of Expected Data Manager Component",
+        "status": "FOUND",
+        "category": "Code Quality",
+        "severity": "potential",
+        "storyPoint": 5,
+        "description": "The product uses a dedicated, central data manager component as required by design, but it contains code that performs data-access operations that do not use this data manager.",
+        "evidence": {
+          "files": [
+            "src/main/java/com/zavabank/loanorigination/LoanApplyServlet.java",
+            "src/main/java/com/zavabank/loanorigination/LoanStatusServlet.java",
+            "src/main/java/com/zavabank/loanorigination/LoanBootstrapServlet.java"
+          ],
+          "explanation": "All SQL operations (INSERT, UPDATE, SELECT, DDL) are embedded directly in the Servlet handler classes rather than in a dedicated data access or repository component. LoanApplyServlet contains insertApplication(), updateApplication(), and insertDecision() methods with inline PreparedStatement logic. LoanStatusServlet executes SQL in doGet(). LoanBootstrapServlet executes DDL in init(). There is no DAO, repository, or data manager layer; LoanConnectionFactory only provides a connection, not a data manager."
+        }
+      }
+    ]
+  },
+  "execution_time_seconds": 0,
+  "timestamp": ""
+}

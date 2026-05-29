@@ -1,0 +1,187 @@
+{
+  "GeneratedAt": "2026-05-29T04:47:25.0000000Z",
+  "ProjectPath": ".",
+  "Summary": {
+    "TotalFindings": 13,
+    "CveCount": 2,
+    "CweCount": 11,
+    "BySeverity": {
+      "mandatory": 2,
+      "optional": 4,
+      "potential": 7
+    },
+    "ByCategory": {
+      "CVE": 2,
+      "Code Quality": 7,
+      "Credentials & Secrets": 4
+    },
+    "TotalRulesAssessed": 59,
+    "RulesPassed": 48
+  },
+  "CveFindings": [
+    {
+      "Id": "CVE-2023-5072",
+      "Name": "Java: DoS Vulnerability in JSON-JAVA",
+      "Category": "CVE",
+      "Severity": "mandatory",
+      "StoryPoint": 1,
+      "Description": "[CVE-2023-5072](https://github.com/advisories/GHSA-4jq9-2xhw-jpx7): Java: DoS Vulnerability in JSON-JAVA\n\nSeverity: HIGH\n\nA denial of service vulnerability in JSON-Java (org.json). A bug in the parser means that an input string of modest size can lead to indefinite amounts of memory being used. An attacker can exploit nested JSON objects with deeply recursive key structures to trigger an OutOfMemoryError.\n\nAffected dependencies:\n  - org.json:json:20140107 (declared at build.gradle:17) \u2014 vulnerable_version_range: <= 20230618\n\nRecommended fix:\n  - Upgrade org.json:json to 20231013 or later",
+      "Files": [
+        "build.gradle:17"
+      ],
+      "Explanation": "[CVE-2023-5072](https://github.com/advisories/GHSA-4jq9-2xhw-jpx7): Java: DoS Vulnerability in JSON-JAVA\n\nSeverity: HIGH\n\nA denial of service vulnerability in JSON-Java (org.json). A bug in the parser means that an input string of modest size can lead to indefinite amounts of memory being used. An attacker can exploit nested JSON objects with deeply recursive key structures to trigger an OutOfMemoryError.\n\nAffected dependencies:\n  - org.json:json:20140107 (declared at build.gradle:17) \u2014 vulnerable_version_range: <= 20230618\n\nRecommended fix:\n  - Upgrade org.json:json to 20231013 or later"
+    },
+    {
+      "Id": "CVE-2022-45688",
+      "Name": "json stack overflow vulnerability",
+      "Category": "CVE",
+      "Severity": "mandatory",
+      "StoryPoint": 1,
+      "Description": "[CVE-2022-45688](https://github.com/advisories/GHSA-3vqj-43w4-2q58): json stack overflow vulnerability\n\nSeverity: HIGH\n\nA stack overflow in the XML.toJSONObject component of org.json:json before version 20230227 allows attackers to cause a Denial of Service (DoS) via crafted JSON or XML data.\n\nAffected dependencies:\n  - org.json:json:20140107 (declared at build.gradle:17) \u2014 vulnerable_version_range: < 20230227\n\nRecommended fix:\n  - Upgrade org.json:json to 20231013 or later (addresses both CVE-2022-45688 and CVE-2023-5072)",
+      "Files": [
+        "build.gradle:17"
+      ],
+      "Explanation": "[CVE-2022-45688](https://github.com/advisories/GHSA-3vqj-43w4-2q58): json stack overflow vulnerability\n\nSeverity: HIGH\n\nA stack overflow in the XML.toJSONObject component of org.json:json before version 20230227 allows attackers to cause a Denial of Service (DoS) via crafted JSON or XML data.\n\nAffected dependencies:\n  - org.json:json:20140107 (declared at build.gradle:17) \u2014 vulnerable_version_range: < 20230227\n\nRecommended fix:\n  - Upgrade org.json:json to 20231013 or later (addresses both CVE-2022-45688 and CVE-2023-5072)"
+    }
+  ],
+  "CweFindings": [
+    {
+      "Id": "CWE-477",
+      "Name": "Use of Obsolete Function",
+      "Category": "Code Quality",
+      "Severity": "optional",
+      "StoryPoint": 1,
+      "Description": "The code uses deprecated or obsolete functions, which suggests that the code has not been actively reviewed or maintained.",
+      "Files": [
+        "src/main/java/com/zavabank/loanorigination/LoanConnectionFactory.java"
+      ],
+      "Explanation": "LoanConnectionFactory (line 10) calls Class.forName(\"com.microsoft.sqlserver.jdbc.SQLServerDriver\") to explicitly load the JDBC driver. This pattern has been obsolete since JDBC 4.0 (Java 6+), which introduced automatic driver discovery via java.util.ServiceLoader. The explicit Class.forName() call is unnecessary and indicates the code has not been updated to reflect modern JDBC practices."
+    },
+    {
+      "Id": "CWE-606",
+      "Name": "Unchecked Input for Loop Condition",
+      "Category": "Code Quality",
+      "Severity": "potential",
+      "StoryPoint": 3,
+      "Description": "The product does not properly check inputs that are used for loop conditions, potentially leading to a denial of service or other consequences because of excessive looping.",
+      "Files": [
+        "src/main/java/com/zavabank/loanorigination/LoanApplyServlet.java"
+      ],
+      "Explanation": "The readBody() method (lines 296-305) reads the HTTP request body line by line in a while loop with no maximum size or iteration check. An attacker can send an arbitrarily large request body, causing the loop to run for an indeterminate amount of time and accumulating all content into a StringBuilder without bounds."
+    },
+    {
+      "Id": "CWE-681",
+      "Name": "Incorrect Conversion between Numeric Types",
+      "Category": "Code Quality",
+      "Severity": "potential",
+      "StoryPoint": 3,
+      "Description": "When converting from one data type to another, such as long to integer, data can be omitted or translated in a way that produces unexpected values. If the resulting values are used in a sensitive context, then dangerous behaviors may occur.",
+      "Files": [
+        "src/main/java/com/zavabank/loanorigination/LoanApplyServlet.java"
+      ],
+      "Explanation": "LoanApplyServlet.doPost() at line 37 converts the loan amount using new BigDecimal(payload.optDouble(\"requestedAmount\", 0d)). Constructing a BigDecimal from a double uses the exact binary floating-point representation, which can introduce rounding errors (e.g., 0.1 becomes 0.1000000000000000055511...). For a financial application handling loan amounts, this precision loss in a security-critical calculation path (used for approval decisions and ledger entries) is a meaningful concern."
+    },
+    {
+      "Id": "CWE-772",
+      "Name": "Missing Release of Resource after Effective Lifetime",
+      "Category": "Code Quality",
+      "Severity": "potential",
+      "StoryPoint": 3,
+      "Description": "The product does not release a resource after its effective lifetime has ended, i.e., after the resource is no longer needed.",
+      "Files": [
+        "src/main/java/com/zavabank/loanorigination/LoanApplyServlet.java"
+      ],
+      "Explanation": "In LoanApplyServlet.insertApplication() (lines 187-194), the finally block calls keys.close() (line 189) without a surrounding try-catch. If keys.close() throws a SQLException, statement.close() (line 192) is never executed, causing the PreparedStatement resource to leak for the duration of the connection's lifetime."
+    },
+    {
+      "Id": "CWE-775",
+      "Name": "Missing Release of File Descriptor or Handle after Effective Lifetime",
+      "Category": "Code Quality",
+      "Severity": "potential",
+      "StoryPoint": 3,
+      "Description": "The product does not release a file descriptor or handle after its effective lifetime has ended, i.e., after the file descriptor/handle is no longer needed.",
+      "Files": [
+        "src/main/java/com/zavabank/loanorigination/LoanApplyServlet.java"
+      ],
+      "Explanation": "In LoanApplyServlet.insertApplication() (lines 187-194), the PreparedStatement handle (statement) may not be closed if keys.close() (line 189) throws an exception first, since neither close() call is wrapped in its own try-catch within the finally block. The same pattern is absent from updateApplication() and insertDecision() which do wrap statement.close() in finally but without try-catch protection."
+    },
+    {
+      "Id": "CWE-789",
+      "Name": "Memory Allocation with Excessive Size Value",
+      "Category": "Code Quality",
+      "Severity": "potential",
+      "StoryPoint": 5,
+      "Description": "The product allocates memory based on an untrusted, large size value, but it does not ensure that the size is within expected limits, allowing arbitrary amounts of memory to be allocated.",
+      "Files": [
+        "src/main/java/com/zavabank/loanorigination/LoanApplyServlet.java"
+      ],
+      "Explanation": "The readBody() method (lines 296-305) appends every line of the HTTP request body into a single StringBuilder without any maximum size guard. An attacker can submit a request body of arbitrary size, causing the JVM heap to grow until an OutOfMemoryError is thrown or the server becomes unresponsive."
+    },
+    {
+      "Id": "CWE-1057",
+      "Name": "Data Access Operations Outside of Expected Data Manager Component",
+      "Category": "Code Quality",
+      "Severity": "potential",
+      "StoryPoint": 5,
+      "Description": "The product uses a dedicated, central data manager component as required by design, but it contains code that performs data-access operations that do not use this data manager.",
+      "Files": [
+        "src/main/java/com/zavabank/loanorigination/LoanApplyServlet.java",
+        "src/main/java/com/zavabank/loanorigination/LoanStatusServlet.java",
+        "src/main/java/com/zavabank/loanorigination/LoanBootstrapServlet.java"
+      ],
+      "Explanation": "All SQL operations (INSERT, UPDATE, SELECT, DDL) are embedded directly in the Servlet handler classes rather than in a dedicated data access or repository component. LoanApplyServlet contains insertApplication(), updateApplication(), and insertDecision() methods with inline PreparedStatement logic. LoanStatusServlet executes SQL in doGet(). LoanBootstrapServlet executes DDL in init(). There is no DAO, repository, or data manager layer; LoanConnectionFactory only provides a connection, not a data manager."
+    },
+    {
+      "Id": "CWE-259",
+      "Name": "Use of Hard-coded Password",
+      "Category": "Credentials & Secrets",
+      "Severity": "optional",
+      "StoryPoint": 5,
+      "Description": "The product contains a hard-coded password, which it uses for its own inbound authentication or for outbound communication to external components.",
+      "Files": [
+        "src/main/resources/loan-origination.properties",
+        "Dockerfile"
+      ],
+      "Explanation": "A plaintext SQL Server password is committed to source control in two locations: (1) loan-origination.properties line 5: db.****** \u2014 packaged into the WAR and loaded at runtime by LoanOriginationConfig; (2) Dockerfile line 11: ENV DB_PASSWORD=YourStrong!Passw0rd \u2014 baked into the container image layer, visible via docker history/inspect. Both expose the credential to any party with access to the repository or the Docker image."
+    },
+    {
+      "Id": "CWE-732",
+      "Name": "Incorrect Permission Assignment for Critical Resource",
+      "Category": "Credentials & Secrets",
+      "Severity": "optional",
+      "StoryPoint": 5,
+      "Description": "The product specifies permissions for a security-critical resource in a way that allows that resource to be read or modified by unintended actors.",
+      "Files": [
+        "src/main/resources/loan-origination.properties",
+        "Dockerfile"
+      ],
+      "Explanation": "The loan-origination.properties file containing plaintext database credentials (db.user=sa, db.****** is stored in src/main/resources and packaged into the WAR artifact, making it readable by any party who can access the deployed WAR or the repository. Additionally, the Dockerfile bakes these credentials as ENV directives into image layers, where they are accessible to anyone with Docker socket access via docker inspect or docker history."
+    },
+    {
+      "Id": "CWE-778",
+      "Name": "Insufficient Logging",
+      "Category": "Credentials & Secrets",
+      "Severity": "potential",
+      "StoryPoint": 3,
+      "Description": "When a security-critical event occurs, the product either does not record the event or omits important details about the event when logging it.",
+      "Files": [
+        "src/main/java/com/zavabank/loanorigination/LoanApplyServlet.java",
+        "src/main/java/com/zavabank/loanorigination/LoanStatusServlet.java"
+      ],
+      "Explanation": "The application has no logging framework (no SLF4J, Log4j, or java.util.logging usage found anywhere in the source). Security-critical events such as KYC failures, risk engine declines, SQL exceptions, and downstream service call failures are not logged \u2014 exceptions in callJsonApi() are silently swallowed with catch (Exception ignored), and SQL errors are returned as generic HTTP 500 responses with no audit trail. Loan decisions of all types (Approved, Declined, KYC_REVIEW) produce no server-side log entries."
+    },
+    {
+      "Id": "CWE-798",
+      "Name": "Use of Hard-coded Credentials",
+      "Category": "Credentials & Secrets",
+      "Severity": "optional",
+      "StoryPoint": 5,
+      "Description": "The product contains hard-coded credentials, such as a password or cryptographic key.",
+      "Files": [
+        "src/main/resources/loan-origination.properties",
+        "Dockerfile"
+      ],
+      "Explanation": "Both the SQL Server username and password are committed to source control as plaintext: (1) loan-origination.properties lines 4-5: db.user=sa and db.******; (2) Dockerfile lines 10-11: ENV DB_USER=sa and ENV DB_PASSWORD=YourStrong!Passw0rd. The account used is the SQL Server system administrator (sa), which has maximum privileges over the database instance."
+    }
+  ]
+}

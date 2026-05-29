@@ -1,0 +1,1277 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Assessment - Zava Loan Origination API</title>
+<style>
+:root {
+  --bg-primary: #ffffff;
+  --bg-card: #f8f9fa;
+  --bg-page: #f0f1f3;
+  --text-primary: #24292f;
+  --text-secondary: #57606a;
+  --text-muted: #6b7280;
+  --border-color: #d0d7de;
+  --border-light: #e1e4e8;
+  --link-color: #2563eb;
+  --color-mandatory: #E3008C;
+  --color-potential: #637CEF;
+  --color-optional: #A19F9D;
+  --font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Arial, sans-serif;
+  --font-mono: 'Cascadia Code', 'Consolas', 'Courier New', monospace;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: var(--font-family); font-size: 13px; color: var(--text-primary); background: var(--bg-primary); line-height: 1.5; margin: 0; padding: 0; }
+a { color: var(--link-color); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+/* ── Page layout ───────────────────────────────────────────── */
+.main { margin: 0; padding: 24px 32px; background: var(--bg-primary); }
+.back-link { color: var(--text-muted); font-size: 13px; margin-bottom: 16px; display: block; }
+h1 { font-weight: 600; font-size: 20px; color: var(--text-primary); margin-bottom: 20px; }
+
+/* ── Report cards (matches VS Code .vscode-report-card) ──── */
+.report-card { background: var(--bg-card); border: 1px solid var(--border-light); border-radius: 4px; padding: 12px; margin-bottom: 20px; }
+.report-card h2 { font-size: 14px; font-weight: 600; margin: 0; color: var(--text-primary); }
+.report-card-body { margin-top: 16px; }
+
+/* ── Component Information (two-column) ────────────────── */
+.app-info-container { display: flex; gap: 8px; flex-wrap: wrap; }
+.app-info-column { flex: 1; min-width: 200px; display: flex; flex-direction: column; gap: 8px; }
+.app-info-row { display: flex; align-items: baseline; }
+.app-info-label { width: 136px; flex-shrink: 0; font-weight: 600; color: var(--text-primary); }
+.app-info-value { flex: 1; color: var(--text-primary); }
+
+/* ── Issue Summary (pie charts + legend) ─────────────────── */
+.cards-container { display: flex; align-items: stretch; gap: 20px; flex-wrap: wrap; }
+.issue-summary-card { flex: 2; }
+.domain-summary-container { display: flex; flex-wrap: wrap; gap: 20px; justify-content: space-around; }
+.domain-summary-item { flex: 1; min-width: 120px; text-align: center; padding: 0 16px; border-right: 1px solid var(--border-light); }
+.domain-summary-item:last-child { border-right: none; }
+.domain-summary-item h3 { font-size: 13px; font-weight: 600; color: var(--text-primary); margin-top: 8px; }
+.domain-summary-item .count { font-size: 12px; color: var(--text-secondary); }
+.criticality-legend { display: flex; flex-wrap: wrap; gap: 15px; padding-top: 12px; justify-content: center; }
+.criticality-legend .legend-item { display: flex; align-items: center; gap: 4px; font-size: 12px; color: var(--text-secondary); }
+.legend-swatch { display: inline-block; width: 1em; height: 1em; border-radius: 2px; }
+
+/* ── Issue list tables ───────────────────────────────────── */
+.issue-section { margin-top: 20px; }
+.issue-section h2 { font-size: 14px; font-weight: 600; margin-bottom: 8px; }
+.issue-table { width: 100%; border-collapse: collapse; table-layout: fixed; min-width: 600px; }
+.issue-table th { text-align: left; text-transform: uppercase; font-weight: 600; font-size: calc(13px * 0.875); padding: 6px 8px; background: var(--bg-card); border-bottom: 1px solid var(--border-color); color: var(--text-secondary); position: sticky; top: 0; z-index: 1; }
+.issue-table td { padding: 12px 8px; border-bottom: 1px solid var(--border-light); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; vertical-align: middle; }
+.col-issue { width: 55%; }
+.col-criticality { width: 25%; }
+.col-storypoint { width: 20%; }
+
+/* ── Target dropdown ─────────────────────────────────────── */
+.target-select-container { margin: 4px 0 16px 0; display: flex; align-items: center; gap: 8px; }
+.target-select-container label { font-weight: 600; color: var(--text-primary); font-size: 14px; }
+.target-select-container select { font-family: var(--font-family); font-size: 13px; padding: 4px 8px; border: 1px solid var(--border-color); border-radius: 4px; background: var(--bg-primary); color: var(--text-primary); cursor: pointer; }
+
+/* ── Filter bar ──────────────────────────────────────────── */
+.filter-bar { display: flex; flex-wrap: wrap; gap: 16px; margin: 16px 0 8px 0; align-items: center; }
+.multi-select { position: relative; display: inline-block; min-width: 140px; }
+.multi-select-btn { font-family: var(--font-family); font-size: 13px; padding: 4px 24px 4px 8px; border: 1px solid var(--border-color); border-radius: 4px; background: var(--bg-primary); color: var(--text-primary); cursor: pointer; width: 100%; text-align: left; position: relative; white-space: nowrap; }
+.multi-select-btn::after { content: '\25BE'; position: absolute; right: 8px; top: 50%; transform: translateY(-50%); font-size: 11px; color: var(--text-secondary); }
+.multi-select-dropdown { display: none; position: absolute; top: 100%; left: 0; min-width: 100%; background: var(--bg-primary); border: 1px solid var(--border-color); border-radius: 4px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); z-index: 100; margin-top: 2px; }
+.multi-select.open .multi-select-dropdown { display: block; }
+.multi-select-option { display: flex; align-items: center; gap: 6px; padding: 5px 10px; cursor: pointer; font-size: 13px; white-space: nowrap; }
+.multi-select-option:hover { background: var(--bg-secondary); }
+.multi-select-option input[type=checkbox] { margin: 0; cursor: pointer; }
+.clear-filters { font-size: 12px; color: var(--link-color); cursor: pointer; margin-left: 4px; }
+
+/* ── Criticality labels (colored square + text) ──────────── */
+.crit-label { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; white-space: nowrap; }
+.crit-square { display: inline-block; width: 10px; height: 10px; border-radius: 2px; flex-shrink: 0; }
+.crit-square-mandatory { background: var(--color-mandatory); }
+.crit-square-potential { background: var(--color-potential); }
+.crit-square-optional { background: var(--color-optional); }
+
+/* ── Expandable rows ─────────────────────────────────────── */
+.expand-btn { background: none; border: none; cursor: pointer; width: 20px; height: 20px; display: inline-flex; align-items: center; justify-content: center; color: var(--text-muted); font-size: 11px; transition: transform 0.15s; padding: 0; vertical-align: middle; flex-shrink: 0; }
+.expand-btn.open { transform: rotate(90deg); }
+.issue-title-cell { display: flex; align-items: center; gap: 4px; }
+.detail-row td { padding: 0; border-bottom: 1px solid var(--border-light); white-space: normal; overflow: visible; text-overflow: clip; }
+.detail-content { display: flex; gap: 0; padding: 8px 8px 8px 32px; min-width: 0; }
+.file-list { flex: 0 0 50%; min-width: 0; overflow: hidden; }
+.file-list table { width: 100%; border-collapse: collapse; }
+.file-list th { font-size: calc(13px * 0.875); text-transform: uppercase; font-weight: 600; color: var(--text-secondary); padding: 6px 8px; border-bottom: 1px solid var(--border-color); text-align: left; height: 32px; }
+.file-list td { font-size: 13px; padding: 6px 8px; border-bottom: 1px solid var(--border-light); color: var(--text-primary); }
+.file-list .file-path { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 300px; display: block; }
+.file-list .position { font-family: var(--font-mono); font-size: 12px; color: var(--text-secondary); }
+.explanation-panel { flex: 1; padding-left: 16px; min-width: 0; overflow-wrap: break-word; word-wrap: break-word; }
+.explanation-panel h4 { font-size: calc(13px * 0.875); text-transform: uppercase; font-weight: 600; color: var(--text-secondary); padding: 6px 0; border-bottom: 1px solid var(--border-color); height: 32px; margin: 0; }
+.explanation-panel p { font-size: 13px; padding: 8px 0; color: var(--text-primary); line-height: 1.6; white-space: normal; word-break: break-word; }
+
+/* ── Experimental badge ──────────────────────────────────── */
+.badge-experimental { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; background: #fef9c3; color: #854d0e; vertical-align: middle; margin-left: 8px; cursor: default; }
+
+/* ── Footer ──────────────────────────────────────────────── */
+.footer { text-align: center; margin-top: 24px; color: var(--text-muted); font-size: 13px; }
+
+/* ── Responsive ──────────────────────────────────────────── */
+@media (max-width: 800px) {
+  .main { padding: 16px; }
+  .app-info-container { flex-direction: column; }
+  .domain-summary-container { flex-direction: column; }
+  .domain-summary-item { border-right: none; border-bottom: 1px solid var(--border-light); padding-bottom: 12px; }
+  .detail-content { flex-direction: column; }
+  .file-list { flex: none; width: 100%; }
+  .explanation-panel { padding-left: 0; padding-top: 8px; }
+}
+/* ── Tab navigation ──────────────────────────────────────── */
+.tab-nav { display: flex; gap: 0; border-bottom: 1px solid var(--border-color); margin-bottom: 28px; flex-wrap: wrap; }
+.tab-btn { background: none; border: none; border-bottom: 2px solid transparent; padding: 10px 18px; font-size: 13px; font-family: var(--font-family); color: var(--text-secondary); cursor: pointer; margin-bottom: -1px; white-space: nowrap; position: relative; }
+.tab-btn:hover { color: var(--text-primary); }
+.tab-btn.active { color: var(--link-color); border-bottom-color: var(--link-color); font-weight: 600; }
+.tab-panel { display: none; }
+.tab-panel.active { display: block; }
+
+/* ── Tooltip on tab ──────────────────────────────────────── */
+.tab-btn[data-tooltip]::after { content: attr(data-tooltip); position: absolute; bottom: calc(100% + 8px); left: 50%; transform: translateX(-50%); background: #24292f; color: #ffffff; font-size: 12px; font-weight: 400; padding: 6px 10px; border-radius: 4px; white-space: normal; width: max-content; max-width: 260px; text-align: center; pointer-events: none; opacity: 0; transition: opacity 0.15s; z-index: 100; }
+.tab-btn[data-tooltip]:hover::after { opacity: 1; }
+
+/* ── Fact content — prose column ─────────────────────────── */
+.fact-content { max-width: 860px; margin: 0 auto; line-height: 1.75; color: var(--text-primary); font-size: 14px; }
+.fact-content h1 { font-size: 22px; font-weight: 700; margin: 0 0 6px 0; color: var(--text-primary); letter-spacing: -0.01em; }
+.fact-content h1 + p { margin-top: 6px; color: var(--text-secondary); font-size: 14px; margin-bottom: 24px; }
+.fact-content h2 { font-size: 17px; font-weight: 700; margin: 36px 0 12px 0; padding-bottom: 6px; border-bottom: 1px solid var(--border-color); color: var(--text-primary); letter-spacing: -0.01em; }
+.fact-content h3 { font-size: 14px; font-weight: 700; margin: 24px 0 8px 0; color: var(--text-primary); text-transform: uppercase; letter-spacing: 0.04em; font-size: 12px; color: var(--text-secondary); }
+.fact-content p { margin: 10px 0; color: var(--text-primary); }
+.fact-content ul, .fact-content ol { margin: 10px 0 10px 22px; }
+.fact-content li { margin: 5px 0; }
+.fact-content a { color: var(--link-color); }
+.fact-content a:hover { text-decoration: underline; }
+
+/* ── Fact tables ─────────────────────────────────────────── */
+.table-wrap { overflow-x: auto; margin: 16px 0; }
+.fact-content table { border-collapse: collapse; width: 100%; margin: 16px 0; font-size: 13px; border-radius: 6px; overflow: hidden; border: 1px solid var(--border-color); }
+.fact-content thead { background: var(--bg-card); }
+.fact-content th { text-align: left; font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: 0.04em; padding: 8px 14px; border-bottom: 1px solid var(--border-color); color: var(--text-secondary); }
+.fact-content td { padding: 9px 14px; border-bottom: 1px solid var(--border-light); vertical-align: top; color: var(--text-primary); }
+.fact-content tr:last-child td { border-bottom: none; }
+.fact-content tbody tr:hover { background: #f6f8fa; }
+
+/* ── Fact code ───────────────────────────────────────────── */
+.fact-content code { font-family: var(--font-mono); font-size: 12px; background: #f0f1f3; padding: 2px 6px; border-radius: 4px; color: #c7254e; }
+.fact-content pre { background: #f6f8fa; border: 1px solid var(--border-light); border-radius: 6px; padding: 14px 16px; overflow-x: auto; margin: 14px 0; }
+.fact-content pre code { background: none; color: var(--text-primary); padding: 0; border-radius: 0; }
+.fact-content hr { border: none; border-top: 1px solid var(--border-light); margin: 28px 0; }
+.fact-content strong { font-weight: 600; }
+.fact-content em { font-style: italic; }
+.fact-content blockquote { border-left: 3px solid var(--border-color); margin: 12px 0; padding: 4px 16px; color: var(--text-secondary); }
+.fact-unavailable { padding: 32px 0; }
+.fact-unavailable h3 { font-size: 16px; font-weight: 600; color: var(--text-primary); text-transform: none; letter-spacing: 0; margin: 0 0 12px 0; }
+.fact-unavailable p { margin: 0 0 8px 0; color: var(--text-secondary); }
+.fact-unavailable ol, .fact-unavailable ul { margin: 0 0 0 22px; color: var(--text-primary); }
+.fact-unavailable li { margin: 6px 0; }
+
+/* ── Mermaid diagram card ─────────────────────────────────── */
+.mermaid { background: var(--bg-card); border: 1px solid var(--border-light); border-radius: 8px; padding: 24px 16px; margin: 20px 0; overflow-x: auto; text-align: center; cursor: pointer; position: relative; }
+.mermaid:hover { border-color: var(--border-color); }
+.mermaid svg { max-width: 100%; height: auto !important; display: inline-block; }
+.mermaid-zoom-hint { position: absolute; top: 8px; right: 10px; font-size: 11px; color: var(--text-muted); opacity: 0; transition: opacity 0.15s; pointer-events: none; }
+.mermaid:hover .mermaid-zoom-hint { opacity: 1; }
+
+/* ── Diagram lightbox ────────────────────────────────────── */
+.diagram-lightbox { display: none; position: fixed; inset: 0; z-index: 1000; background: rgba(0,0,0,0.7); backdrop-filter: blur(2px); align-items: center; justify-content: center; cursor: zoom-out; padding: 48px 32px; }
+.diagram-lightbox.open { display: flex; }
+.diagram-lightbox-inner { background: #ffffff; border-radius: 10px; padding: 32px; width: 88vw; max-height: 88vh; overflow: hidden; cursor: default; box-shadow: 0 24px 64px rgba(0,0,0,0.35); display: flex; align-items: center; justify-content: center; }
+.diagram-lightbox-inner svg { width: 100% !important; height: auto !important; max-height: 76vh; display: block; }
+.diagram-lightbox-close { position: fixed; top: 20px; right: 24px; background: #ffffff; border: none; border-radius: 50%; width: 36px; height: 36px; font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; color: var(--text-primary); box-shadow: 0 2px 8px rgba(0,0,0,0.2); z-index: 1001; }
+.diagram-lightbox-close:hover { background: var(--bg-card); }
+.diagram-lightbox-hint { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.55); color: #ffffff; font-size: 12px; padding: 6px 14px; border-radius: 20px; pointer-events: none; white-space: nowrap; z-index: 1001; }
+</style>
+<script>
+window.__mermaidPending = [];
+window.__mermaidReady = false;
+window.__renderMermaidIn = function(container) {
+  if (container) { window.__mermaidPending.push(container); }
+};
+</script>
+<script type="module">
+import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+mermaid.initialize({ startOnLoad: false, theme: 'default', flowchart: { useMaxWidth: true }, sequence: { useMaxWidth: true } });
+
+window.__renderMermaidIn = function(container) {
+  var nodes = container ? container.querySelectorAll('.mermaid:not([data-processed])') : [];
+  if (nodes.length > 0) {
+    mermaid.run({ nodes: Array.from(nodes) }).then(function() {
+      nodes.forEach(function(node) {
+        if (!node.querySelector('.mermaid-zoom-hint')) {
+          var hint = document.createElement('span');
+          hint.className = 'mermaid-zoom-hint';
+          hint.textContent = 'Click to expand';
+          node.appendChild(hint);
+        }
+      });
+    });
+  }
+};
+
+var drained = new Set();
+(window.__mermaidPending || []).forEach(function(c) {
+  if (!drained.has(c)) { drained.add(c); window.__renderMermaidIn(c); }
+});
+window.__mermaidPending = [];
+window.__mermaidReady = true;
+
+function renderActivePanels() {
+  document.querySelectorAll('.tab-panel.active').forEach(function(p) {
+    if (!drained.has(p)) { drained.add(p); window.__renderMermaidIn(p); }
+  });
+}
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', renderActivePanels);
+} else {
+  renderActivePanels();
+}
+</script>
+</head><body>
+<div id="diagram-lightbox" class="diagram-lightbox" role="dialog" aria-modal="true">
+  <button class="diagram-lightbox-close" id="diagram-lightbox-close" aria-label="Close">&#x2715;</button>
+  <div class="diagram-lightbox-hint">Scroll to zoom &nbsp;&middot;&nbsp; Drag to pan &nbsp;&middot;&nbsp; Double-click to reset</div>
+  <div class="diagram-lightbox-inner" id="diagram-lightbox-inner"></div>
+</div>
+<div class="main">
+<h1>Zava Loan Origination API</h1>
+<div class="report-card">
+  <h2>Component Information</h2>
+  <div class="report-card-body">
+    <div class="app-info-container">
+      <div class="app-info-column">
+        <div class="app-info-row"><span class="app-info-label">Component Name</span><span class="app-info-value">Zava Loan Origination API</span></div>
+        <div class="app-info-row"><span class="app-info-label">Java Version</span><span class="app-info-value">11</span></div>
+        <div class="app-info-row"><span class="app-info-label">Effort</span><span class="app-info-value" id="effort-display">L (total story points: 52)</span></div>
+      </div>
+      <div class="app-info-column">
+        <div class="app-info-row"><span class="app-info-label">Build Tools</span><span class="app-info-value">Gradle, Docker</span></div>
+        <div class="app-info-row"><span class="app-info-label">Frameworks</span><span class="app-info-value">Servlet API 4.0.1, Tomcat 9 WAR</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+<nav class="tab-nav">
+  <button class="tab-btn active" data-tab="tab-issues" data-tooltip="Issues detected in the source code">Issues</button>
+  <button class="tab-btn" data-tab="tab-arch" data-tooltip="How the app&#x27;s layers connect — from UI to data.">Architecture</button>
+  <button class="tab-btn" data-tab="tab-api" data-tooltip="Endpoints exposed by this app and how services communicate.">API Contracts</button>
+  <button class="tab-btn" data-tab="tab-config" data-tooltip="Environment settings, runtime profiles, and deployment manifests.">Configuration</button>
+  <button class="tab-btn" data-tab="tab-workflows" data-tooltip="Domain entities and the core flows users move through.">Business Workflows</button>
+  <button class="tab-btn" data-tab="tab-deps" data-tooltip="Libraries and frameworks this app depends on, grouped by category.">Dependencies</button>
+  <button class="tab-btn" data-tab="tab-data" data-tooltip="Database schema, entity relationships, and persistence behavior.">Data Model</button>
+</nav>
+<div id="tab-issues" class="tab-panel active">
+<div class="target-select-container">
+  <label for="target-select">Target Compute Service:</label>
+  <select id="target-select" onchange="onTargetChange(this.value)">
+    <option value="azure-aks">Azure Kubernetes Service</option>
+  </select>
+</div>
+<div class="report-card">
+  <h2>Issue Summary</h2>
+  <div class="report-card-body">
+    <div class="domain-summary-container" id="donut-container">
+      <div class="domain-summary-item">
+<svg viewBox="0 0 100 100" width="100" height="100" style="display:block;margin:0 auto;transform:rotate(-90deg);">
+  <circle cx="50" cy="50" r="35" fill="none" stroke="var(--color-potential)" stroke-width="15" stroke-dasharray="219.91 219.91" stroke-dashoffset="-0.00"/>
+</svg>
+
+        <h3>Cloud Readiness</h3>
+        <div class="count">3 issues</div>
+      </div>
+      <div class="domain-summary-item">
+<svg viewBox="0 0 100 100" width="100" height="100" style="display:block;margin:0 auto;transform:rotate(-90deg);">
+  <circle cx="50" cy="50" r="35" fill="none" stroke="var(--color-mandatory)" stroke-width="15" stroke-dasharray="219.91 219.91" stroke-dashoffset="-0.00"/>
+</svg>
+
+        <h3>Java Upgrade</h3>
+        <div class="count">1 issue</div>
+      </div>
+      <div class="domain-summary-item">
+<svg viewBox="0 0 100 100" width="100" height="100" style="display:block;margin:0 auto;transform:rotate(-90deg);">
+  <circle cx="50" cy="50" r="35" fill="none" stroke="var(--color-mandatory)" stroke-width="15" stroke-dasharray="145.11 219.91" stroke-dashoffset="-0.00"/>
+  <circle cx="50" cy="50" r="35" fill="none" stroke="var(--color-potential)" stroke-width="15" stroke-dasharray="71.80 219.91" stroke-dashoffset="-146.61"/>
+</svg>
+
+        <h3>Security</h3>
+        <div class="count">3 issues</div>
+      </div>
+    </div>
+    <div class="criticality-legend">
+      <div class="legend-item"><span class="legend-swatch" style="background:var(--color-mandatory)"></span>Mandatory</div>
+      <div class="legend-item"><span class="legend-swatch" style="background:var(--color-potential)"></span>Potential</div>
+      <div class="legend-item"><span class="legend-swatch" style="background:var(--color-optional)"></span>Optional</div>
+    </div>
+  </div>
+</div>
+<div class="filter-bar" id="filter-bar">
+  <div class="multi-select" id="domain-ms">
+    <button class="multi-select-btn" onclick="toggleMultiSelect('domain-ms')">Domain</button>
+    <div class="multi-select-dropdown">
+      <label class="multi-select-option"><input type="checkbox" value="cloud-readiness" onchange="onMultiSelectChange('domain-ms','Domain')"/> Cloud Readiness</label>
+      <label class="multi-select-option"><input type="checkbox" value="java-upgrade" onchange="onMultiSelectChange('domain-ms','Domain')"/> Java Upgrade</label>
+      <label class="multi-select-option"><input type="checkbox" value="security" onchange="onMultiSelectChange('domain-ms','Domain')"/> Security</label>
+    </div>
+  </div>
+  <div class="multi-select" id="criticality-ms">
+    <button class="multi-select-btn" onclick="toggleMultiSelect('criticality-ms')">Criticality</button>
+    <div class="multi-select-dropdown">
+      <label class="multi-select-option"><input type="checkbox" value="mandatory" onchange="onMultiSelectChange('criticality-ms','Criticality')"/> Mandatory</label>
+      <label class="multi-select-option"><input type="checkbox" value="potential" onchange="onMultiSelectChange('criticality-ms','Criticality')"/> Potential</label>
+    </div>
+  </div>
+  <a class="clear-filters" href="javascript:void(0)" onclick="clearAllFilters()">Clear all</a>
+</div>
+<div class="issue-section" data-domain="cloud-readiness">
+  <h2>Cloud Readiness</h2>
+  <table class="issue-table">
+    <colgroup><col class="col-issue"/><col class="col-criticality"/><col class="col-storypoint"/></colgroup>
+    <thead><tr><th>Issue Category</th><th>Criticality</th><th>Story Point</th></tr></thead>
+    <tbody>
+    <tr class="issue-row" data-criticality="potential" data-targets='{&quot;azure-aks&quot;:{&quot;effort&quot;:8,&quot;severity&quot;:&quot;potential&quot;}}' data-default-effort="8" data-default-severity="potential" data-rule="cloud-sync-service-orchestration" onclick="toggleRow('row-cloudreadiness-0', this)" style="cursor:pointer;">
+      <td style="white-space:normal;"><div class="issue-title-cell"><button class="expand-btn" id="btn-row-cloudreadiness-0">&#x276F;</button> Synchronous downstream orchestration can create latency and resiliency risks</div></td>
+      <td class="crit-cell"><span class="crit-label"><span class="crit-square crit-square-potential"></span>Potential</span></td>
+      <td class="sp-cell">8</td>
+    </tr>
+    <tr class="detail-row" id="row-cloudreadiness-0" style="display:none;">
+      <td colspan="3">
+        <div class="detail-content">
+          <div class="file-list">
+            <table><colgroup><col style="width:70%"/><col style="width:30%"/></colgroup>
+            <thead><tr><th>File</th><th>Position</th></tr></thead><tbody>
+            <tr><td><span class="file-path" title="src/main/java/com/zavabank/loanorigination/LoanApplyServlet.java">src/main/java/com/zavabank/loanorigination/LoanApplyServlet.java</span></td><td><span class="position">Line 114</span></td></tr>
+            <tr><td><span class="file-path" title="src/main/java/com/zavabank/loanorigination/LoanApplyServlet.java">src/main/java/com/zavabank/loanorigination/LoanApplyServlet.java</span></td><td><span class="position">Line 127</span></td></tr>
+            <tr><td><span class="file-path" title="src/main/java/com/zavabank/loanorigination/LoanApplyServlet.java">src/main/java/com/zavabank/loanorigination/LoanApplyServlet.java</span></td><td><span class="position">Line 150</span></td></tr>
+            </tbody></table>
+          </div>
+          <div class="explanation-panel">
+            <h4>Explanation</h4>
+            <div><p>The loan-application flow makes sequential HTTP calls to KYC, risk, and ledger services within the request thread. Without retries, circuit breakers, or fallback logic, downstream instability directly impacts request latency and completion.</p></div>
+          </div>
+        </div>
+      </td>
+    </tr>
+    <tr class="issue-row" data-criticality="potential" data-targets='{&quot;azure-aks&quot;:{&quot;effort&quot;:5,&quot;severity&quot;:&quot;potential&quot;}}' data-default-effort="5" data-default-severity="potential" data-rule="cloud-war-packaging" onclick="toggleRow('row-cloudreadiness-1', this)" style="cursor:pointer;">
+      <td style="white-space:normal;"><div class="issue-title-cell"><button class="expand-btn" id="btn-row-cloudreadiness-1">&#x276F;</button> Servlet WAR packaging requires container runtime alignment</div></td>
+      <td class="crit-cell"><span class="crit-label"><span class="crit-square crit-square-potential"></span>Potential</span></td>
+      <td class="sp-cell">5</td>
+    </tr>
+    <tr class="detail-row" id="row-cloudreadiness-1" style="display:none;">
+      <td colspan="3">
+        <div class="detail-content">
+          <div class="file-list">
+            <table><colgroup><col style="width:70%"/><col style="width:30%"/></colgroup>
+            <thead><tr><th>File</th><th>Position</th></tr></thead><tbody>
+            <tr><td><span class="file-path" title="build.gradle">build.gradle</span></td><td><span class="position">Line 2</span></td></tr>
+            <tr><td><span class="file-path" title="src/main/webapp/WEB-INF/web.xml">src/main/webapp/WEB-INF/web.xml</span></td><td><span class="position">Line 1</span></td></tr>
+            </tbody></table>
+          </div>
+          <div class="explanation-panel">
+            <h4>Explanation</h4>
+            <div><p>The application is packaged as a traditional WAR and mapped through <code>web.xml</code>, so deployments depend on an external Tomcat runtime and servlet lifecycle behavior. Moving to managed container or platform services requires validating WAR deployment, startup behavior, and servlet compatibility.</p></div>
+          </div>
+        </div>
+      </td>
+    </tr>
+    <tr class="issue-row" data-criticality="potential" data-targets='{&quot;azure-aks&quot;:{&quot;effort&quot;:8,&quot;severity&quot;:&quot;potential&quot;}}' data-default-effort="8" data-default-severity="potential" data-rule="cloud-direct-jdbc-bootstrap" onclick="toggleRow('row-cloudreadiness-2', this)" style="cursor:pointer;">
+      <td style="white-space:normal;"><div class="issue-title-cell"><button class="expand-btn" id="btn-row-cloudreadiness-2">&#x276F;</button> Direct SQL Server coupling increases migration effort</div></td>
+      <td class="crit-cell"><span class="crit-label"><span class="crit-square crit-square-potential"></span>Potential</span></td>
+      <td class="sp-cell">8</td>
+    </tr>
+    <tr class="detail-row" id="row-cloudreadiness-2" style="display:none;">
+      <td colspan="3">
+        <div class="detail-content">
+          <div class="file-list">
+            <table><colgroup><col style="width:70%"/><col style="width:30%"/></colgroup>
+            <thead><tr><th>File</th><th>Position</th></tr></thead><tbody>
+            <tr><td><span class="file-path" title="src/main/java/com/zavabank/loanorigination/LoanConnectionFactory.java">src/main/java/com/zavabank/loanorigination/LoanConnectionFactory.java</span></td><td><span class="position">Line 19</span></td></tr>
+            <tr><td><span class="file-path" title="src/main/java/com/zavabank/loanorigination/LoanBootstrapServlet.java">src/main/java/com/zavabank/loanorigination/LoanBootstrapServlet.java</span></td><td><span class="position">Line 17</span></td></tr>
+            </tbody></table>
+          </div>
+          <div class="explanation-panel">
+            <h4>Explanation</h4>
+            <div><p>Persistence uses direct JDBC statements and startup-time DDL creation instead of a migration tool or data-access abstraction. Cloud moves must preserve SQL Server connectivity, bootstrap ordering, and SQL Server specific behavior such as <code>GETDATE()</code> and identity columns.</p></div>
+          </div>
+        </div>
+      </td>
+    </tr>
+    </tbody>
+  </table>
+</div>
+<div class="issue-section" data-domain="java-upgrade">
+  <h2>Java Upgrade</h2>
+  <table class="issue-table">
+    <colgroup><col class="col-issue"/><col class="col-criticality"/><col class="col-storypoint"/></colgroup>
+    <thead><tr><th>Issue Category</th><th>Criticality</th><th>Story Point</th></tr></thead>
+    <tbody>
+    <tr class="issue-row" data-criticality="mandatory" data-targets='{&quot;azure-aks&quot;:{&quot;effort&quot;:13,&quot;severity&quot;:&quot;mandatory&quot;}}' data-default-effort="13" data-default-severity="mandatory" data-rule="java-jakarta-servlet-upgrade" onclick="toggleRow('row-javaupgrade-0', this)" style="cursor:pointer;">
+      <td style="white-space:normal;"><div class="issue-title-cell"><button class="expand-btn" id="btn-row-javaupgrade-0">&#x276F;</button> Jakarta namespace migration is required for modern servlet runtimes</div></td>
+      <td class="crit-cell"><span class="crit-label"><span class="crit-square crit-square-mandatory"></span>Mandatory</span></td>
+      <td class="sp-cell">13</td>
+    </tr>
+    <tr class="detail-row" id="row-javaupgrade-0" style="display:none;">
+      <td colspan="3">
+        <div class="detail-content">
+          <div class="file-list">
+            <table><colgroup><col style="width:70%"/><col style="width:30%"/></colgroup>
+            <thead><tr><th>File</th><th>Position</th></tr></thead><tbody>
+            <tr><td><span class="file-path" title="src/main/java/com/zavabank/loanorigination/LoanApplyServlet.java">src/main/java/com/zavabank/loanorigination/LoanApplyServlet.java</span></td><td><span class="position">Line 15</span></td></tr>
+            <tr><td><span class="file-path" title="src/main/java/com/zavabank/loanorigination/LoanStatusServlet.java">src/main/java/com/zavabank/loanorigination/LoanStatusServlet.java</span></td><td><span class="position">Line 8</span></td></tr>
+            <tr><td><span class="file-path" title="src/main/java/com/zavabank/loanorigination/HealthServlet.java">src/main/java/com/zavabank/loanorigination/HealthServlet.java</span></td><td><span class="position">Line 4</span></td></tr>
+            </tbody></table>
+          </div>
+          <div class="explanation-panel">
+            <h4>Explanation</h4>
+            <div><p>The code imports <code>javax.servlet</code> APIs and targets Java 11 and Tomcat 9 style deployment. Modern Java platform and servlet runtime targets require moving to the Jakarta namespace and validating the application on a newer container and JDK.</p></div>
+          </div>
+        </div>
+      </td>
+    </tr>
+    </tbody>
+  </table>
+</div>
+<div class="issue-section" data-domain="security">
+  <h2>Security <span class="badge-experimental" title="These issues were generated by AI and may contain inaccuracies or incomplete information. Please review carefully.">Experimental</span></h2>
+  <table class="issue-table">
+    <colgroup><col class="col-issue"/><col class="col-criticality"/><col class="col-storypoint"/></colgroup>
+    <thead><tr><th>Issue Category</th><th>Criticality</th><th>Story Point</th></tr></thead>
+    <tbody>
+    <tr class="issue-row" data-criticality="mandatory" onclick="toggleRow('row-security-0', this)" style="cursor:pointer;">
+      <td style="white-space:normal;"><div class="issue-title-cell"><button class="expand-btn" id="btn-row-security-0">&#x276F;</button> CWE-798: Hard-coded database credentials are stored in source-controlled configuration</div></td>
+      <td class="crit-cell"><span class="crit-label"><span class="crit-square crit-square-mandatory"></span>Mandatory</span></td>
+      <td class="sp-cell">8</td>
+    </tr>
+    <tr class="detail-row" id="row-security-0" style="display:none;">
+      <td colspan="3">
+        <div class="detail-content">
+          <div class="file-list">
+            <table><thead><tr><th>File</th></tr></thead><tbody>
+            <tr><td><span class="file-path" title="src/main/resources/loan-origination.properties">src/main/resources/loan-origination.properties</span></td></tr>
+            <tr><td><span class="file-path" title="Dockerfile">Dockerfile</span></td></tr>
+            </tbody></table>
+          </div>
+        </div>
+      </td>
+    </tr>
+    <tr class="issue-row" data-criticality="mandatory" onclick="toggleRow('row-security-1', this)" style="cursor:pointer;">
+      <td style="white-space:normal;"><div class="issue-title-cell"><button class="expand-btn" id="btn-row-security-1">&#x276F;</button> CWE-319: Database transport disables encryption and trusts the server certificate</div></td>
+      <td class="crit-cell"><span class="crit-label"><span class="crit-square crit-square-mandatory"></span>Mandatory</span></td>
+      <td class="sp-cell">5</td>
+    </tr>
+    <tr class="detail-row" id="row-security-1" style="display:none;">
+      <td colspan="3">
+        <div class="detail-content">
+          <div class="file-list">
+            <table><thead><tr><th>File</th></tr></thead><tbody>
+            <tr><td><span class="file-path" title="src/main/java/com/zavabank/loanorigination/LoanOriginationConfig.java">src/main/java/com/zavabank/loanorigination/LoanOriginationConfig.java</span></td></tr>
+            </tbody></table>
+          </div>
+        </div>
+      </td>
+    </tr>
+    <tr class="issue-row" data-criticality="potential" onclick="toggleRow('row-security-2', this)" style="cursor:pointer;">
+      <td style="white-space:normal;"><div class="issue-title-cell"><button class="expand-btn" id="btn-row-security-2">&#x276F;</button> CWE-319: Downstream service endpoints use plain HTTP instead of HTTPS</div></td>
+      <td class="crit-cell"><span class="crit-label"><span class="crit-square crit-square-potential"></span>Potential</span></td>
+      <td class="sp-cell">5</td>
+    </tr>
+    <tr class="detail-row" id="row-security-2" style="display:none;">
+      <td colspan="3">
+        <div class="detail-content">
+          <div class="file-list">
+            <table><thead><tr><th>File</th></tr></thead><tbody>
+            <tr><td><span class="file-path" title="src/main/resources/loan-origination.properties">src/main/resources/loan-origination.properties</span></td></tr>
+            <tr><td><span class="file-path" title="Dockerfile">Dockerfile</span></td></tr>
+            </tbody></table>
+          </div>
+        </div>
+      </td>
+    </tr>
+    </tbody>
+  </table>
+</div>
+</div><!-- #tab-issues -->
+<div id="tab-arch" class="tab-panel">
+  <div class="fact-content"><h1 id="architecture-diagram">Architecture Diagram</h1>
+<p>This document summarizes the runtime architecture of the Zava Loan Origination API and the main components that participate in request processing and persistence.</p>
+<h2 id="application-architecture">Application Architecture</h2>
+<div class="mermaid">
+flowchart TD
+    subgraph Client["Client Layer"]
+        User["Internal Banking Client"]
+    end
+    subgraph App["Application Layer - Tomcat 9 WAR"]
+        Web["Servlet Endpoints"]
+        Orchestrator["Loan Orchestration Logic"]
+        Config["Configuration Loader"]
+    end
+    subgraph Data["Data Layer"]
+        JDBC["Direct JDBC Access"]
+        SQL[("SQL Server")]
+    end
+    subgraph External["External Services"]
+        KYC["KYC Service"]
+        Risk["Risk Engine"]
+        Ledger["Ledger Service"]
+    end
+
+    User -->|"HTTP requests"| Web
+    Web -->|"loads settings"| Config
+    Web -->|"loan submission"| Orchestrator
+    Orchestrator -->|"writes applications"| JDBC
+    JDBC -->|"SQL queries"| SQL
+    Orchestrator -->|"verify identity"| KYC
+    Orchestrator -->|"score application"| Risk
+    Orchestrator -->|"create account"| Ledger
+</div>
+<h3 id="technology-stack-summary">Technology Stack Summary</h3>
+<div class="table-wrap"><table><thead><tr>
+<th>Layer</th><th>Technology</th><th>Version</th><th>Purpose</th>
+</tr></thead><tbody>
+<tr><td>Presentation</td><td>Java Servlet API</td><td>4.0.1</td><td>Exposes health, bootstrap, apply, and status endpoints</td></tr>
+<tr><td>Application</td><td>Apache Tomcat</td><td>9 on JDK 11</td><td>Hosts the WAR and executes servlet lifecycle hooks</td></tr>
+<tr><td>Business Logic</td><td>Custom servlet orchestration</td><td>N/A</td><td>Coordinates KYC, risk, ledger, and persistence operations</td></tr>
+<tr><td>Data Access</td><td>JDBC Driver for SQL Server</td><td>12.6.3.jre11</td><td>Opens SQL Server connections and runs SQL statements</td></tr>
+<tr><td>Packaging</td><td>Gradle WAR plugin</td><td>Project-defined</td><td>Builds a deployable <code>ROOT.war</code> artifact</td></tr>
+</tbody></table></div>
+<h3 id="data-storage-external-services">Data Storage & External Services</h3>
+<p>The application persists loan applications and loan decisions in SQL Server by issuing direct JDBC statements and bootstrap DDL at startup. It also depends on three downstream HTTP services: a KYC service for identity verification, a risk engine for approval decisions, and a ledger service for account creation after approval.</p>
+<h3 id="key-architectural-decisions">Key Architectural Decisions</h3>
+<ul>
+<li>Uses a classic servlet WAR deployment model with <code>web.xml</code> mappings instead of Spring Boot or JAX-RS auto-configuration.</li>
+<li>Keeps orchestration logic inside the <code>LoanApplyServlet</code>, which couples request handling, downstream service calls, and persistence in a single component.</li>
+<li>Creates required database tables during servlet initialization instead of using a dedicated schema migration tool.</li>
+</ul>
+<h2 id="component-relationships">Component Relationships</h2>
+<div class="mermaid">
+flowchart LR
+    subgraph Presentation["Presentation"]
+        HealthServlet["HealthServlet"]
+        BootstrapServlet["LoanBootstrapServlet"]
+        ApplyServlet["LoanApplyServlet"]
+        StatusServlet["LoanStatusServlet"]
+    end
+    subgraph Business["Business Logic"]
+        Orchestration["OrchestrationResult Flow"]
+        Config["LoanOriginationConfig"]
+    end
+    subgraph DataAccess["Data Access"]
+        ConnectionFactory["LoanConnectionFactory"]
+        LoanTables["LoanApplications and LoanDecisions"]
+    end
+    subgraph Infrastructure["Infrastructure"]
+        SQLServer["SQL Server"]
+        KycSvc["KYC Service"]
+        RiskSvc["Risk Engine"]
+        LedgerSvc["Ledger Service"]
+    end
+
+    BootstrapServlet -->|"creates schema"| ConnectionFactory
+    ApplyServlet -->|"reads settings"| Config
+    ApplyServlet -->|"delegates"| Orchestration
+    StatusServlet -->|"queries status"| ConnectionFactory
+    Orchestration -->|"opens DB session"| ConnectionFactory
+    ConnectionFactory -->|"persists and queries"| LoanTables
+    LoanTables -->|"stored in"| SQLServer
+    Orchestration -->|"calls"| KycSvc
+    Orchestration -->|"calls"| RiskSvc
+    Orchestration -->|"calls"| LedgerSvc
+    HealthServlet -.->|"availability check"| Presentation
+</div>
+<h3 id="component-inventory">Component Inventory</h3>
+<div class="table-wrap"><table><thead><tr>
+<th>Component</th><th>Layer</th><th>Type</th><th>Responsibility</th>
+</tr></thead><tbody>
+<tr><td><code>HealthServlet</code></td><td>Presentation</td><td>Servlet</td><td>Returns a simple health page for availability checks</td></tr>
+<tr><td><code>LoanBootstrapServlet</code></td><td>Presentation</td><td>Servlet initializer</td><td>Creates required SQL tables when the web application starts</td></tr>
+<tr><td><code>LoanApplyServlet</code></td><td>Presentation</td><td>Servlet</td><td>Accepts loan applications and orchestrates downstream decisions</td></tr>
+<tr><td><code>LoanStatusServlet</code></td><td>Presentation</td><td>Servlet</td><td>Retrieves current application status from SQL Server</td></tr>
+<tr><td><code>LoanOriginationConfig</code></td><td>Business Logic</td><td>Configuration helper</td><td>Resolves properties from environment variables and bundled properties</td></tr>
+<tr><td><code>LoanConnectionFactory</code></td><td>Data Access</td><td>Connection factory</td><td>Creates JDBC connections to SQL Server</td></tr>
+<tr><td><code>LoanApplications</code></td><td>Data Access</td><td>SQL table</td><td>Stores submitted applications and approval outcomes</td></tr>
+<tr><td><code>LoanDecisions</code></td><td>Data Access</td><td>SQL table</td><td>Stores decision audit entries for each application</td></tr>
+</tbody></table></div></div>
+</div>
+<div id="tab-api" class="tab-panel">
+  <div class="fact-content"><h1 id="api-service-communication-contracts">API & Service Communication Contracts</h1>
+<p>This application exposes a very small servlet-based API surface with one main loan submission flow, one status lookup flow, and a couple of operational endpoints. All business communication is synchronous and request-response driven.</p>
+<h2 id="service-catalog">Service Catalog</h2>
+<div class="table-wrap"><table><thead><tr>
+<th>Service</th><th>Port</th><th>Category</th><th>Purpose</th>
+</tr></thead><tbody>
+<tr><td>Zava Loan Origination API</td><td>8080</td><td>API Layer</td><td>Accepts loan applications, stores decisions, and exposes application status</td></tr>
+</tbody></table></div>
+<h2 id="api-endpoints-inventory">API Endpoints Inventory</h2>
+<div class="table-wrap"><table><thead><tr>
+<th>Service</th><th>Method</th><th>Path</th><th>Request Type</th><th>Response Type</th>
+</tr></thead><tbody>
+<tr><td>Zava Loan Origination API</td><td>POST</td><td><code>/api/loans/apply</code></td><td>JSON body with applicant, product, amount, term, and purpose fields</td><td>JSON response with status, application id, KYC outcome, risk score, approved amount, and ledger details</td></tr>
+<tr><td>Zava Loan Origination API</td><td>GET</td><td><code>/api/loans/{id}/status</code></td><td>Path parameter <code>id</code></td><td>JSON response containing stored application and decision state</td></tr>
+<tr><td>Zava Loan Origination API</td><td>GET</td><td><code>/health</code></td><td>None</td><td>Simple HTML availability response</td></tr>
+<tr><td>Zava Loan Origination API</td><td>GET</td><td><code>/internal/bootstrap</code></td><td>None</td><td>Servlet init path used to bootstrap schema on startup</td></tr>
+</tbody></table></div>
+<h2 id="management-observability-endpoints">Management & Observability Endpoints</h2>
+<div class="table-wrap"><table><thead><tr>
+<th>Service</th><th>Endpoint</th><th>Custom Metrics (if any)</th>
+</tr></thead><tbody>
+<tr><td>Zava Loan Origination API</td><td><code>/health</code></td><td>None detected</td></tr>
+<tr><td>Zava Loan Origination API</td><td><code>/internal/bootstrap</code></td><td>None detected</td></tr>
+</tbody></table></div>
+<h2 id="dtos-contracts">DTOs & Contracts</h2>
+<p>The application does not define explicit DTO classes; request and response contracts are assembled directly with <code>org.json.JSONObject</code> instances inside the servlet layer. The primary request contract is the loan application payload consumed by <code>LoanApplyServlet</code>, while the response contracts are dynamic JSON objects for application submission and status retrieval. No gateway-level aggregation DTOs, OpenAPI specification, protobuf schema, or GraphQL schema were detected.</p>
+<h2 id="communication-patterns">Communication Patterns</h2>
+<p>All communication is synchronous. <code>LoanApplyServlet</code> performs three sequential outbound HTTP POST requests: first to the KYC service, then to the risk engine, and finally to the ledger service if the application is approved. The service also performs direct JDBC reads and writes to SQL Server in the same request flow. Resilience is limited to connection and read timeouts of seven seconds for outbound calls, with no circuit breaker, retry policy, or fallback beyond returning an empty JSON object when a downstream call fails. Startup availability depends on SQL Server being reachable because <code>LoanBootstrapServlet</code> creates the schema during initialization. No authentication, authorization, or TLS enforcement is implemented at the API contract layer; endpoints are servlet-mapped and publicly reachable, and downstream service URLs are configured as plain HTTP.</p>
+<h2 id="service-technology-matrix">Service Technology Matrix</h2>
+<div class="table-wrap"><table><thead><tr>
+<th>Service</th><th>Web</th><th>Data Access</th><th>Discovery</th><th>Gateway</th><th>Actuator</th><th>Cache</th><th>Metrics</th>
+</tr></thead><tbody>
+<tr><td>Zava Loan Origination API</td><td>Servlet API</td><td>JDBC</td><td>None</td><td>No</td><td>No</td><td>No</td><td>No</td></tr>
+</tbody></table></div>
+<h2 id="service-communication-sequence">Service Communication Sequence</h2>
+<div class="mermaid">
+sequenceDiagram
+    participant Client
+    participant API as "Loan Origination API"
+    participant DB as "SQL Server"
+    participant KYC as "KYC Service"
+    participant Risk as "Risk Engine"
+    participant Ledger as "Ledger Service"
+
+    Client->>API: POST /api/loans/apply
+    API->>DB: Insert LoanApplication
+    DB-->>API: ApplicationId
+    API->>KYC: Verify applicant identity
+    KYC-->>API: KYC decision
+    alt KYC not passed
+        API-->>Client: KYC_REVIEW response
+    else KYC passed
+        API->>Risk: Score application
+        Risk-->>API: Risk decision
+        alt Risk declines
+            API->>DB: Update application and insert decline decision
+            DB-->>API: Persisted
+            API-->>Client: Declined response
+        else Risk approves
+            API->>Ledger: Create loan account
+            Ledger-->>API: Ledger account result
+            API->>DB: Update application and insert approval decision
+            DB-->>API: Persisted
+            API-->>Client: Approved or pending-ledger response
+        end
+    end
+</div></div>
+</div>
+<div id="tab-config" class="tab-panel">
+  <div class="fact-content"><h1 id="configuration-externalized-settings-inventory">Configuration & Externalized Settings Inventory</h1>
+<p>This project has a compact configuration surface made up of one bundled properties file, environment-variable overrides, container defaults, and servlet deployment descriptors. Secrets handling is basic and relies on static configuration rather than an external secret store.</p>
+<h2 id="configuration-sources">Configuration Sources</h2>
+<div class="table-wrap"><table><thead><tr>
+<th>Source</th><th>Type</th><th>Path/Location</th><th>Notes</th>
+</tr></thead><tbody>
+<tr><td>Loan origination properties</td><td>Properties file</td><td><code>src/main/resources/loan-origination.properties</code></td><td>Default database, downstream service, and business settings</td></tr>
+<tr><td>Process environment</td><td>Environment variables</td><td>Runtime environment</td><td>Overrides database and downstream service settings via <code>System.getenv</code></td></tr>
+<tr><td>Container image defaults</td><td>Dockerfile <code>ENV</code> directives</td><td><code>Dockerfile</code></td><td>Provides default values for DB and downstream URLs in the image</td></tr>
+<tr><td>Servlet deployment descriptor</td><td>XML</td><td><code>src/main/webapp/WEB-INF/web.xml</code></td><td>Declares servlet classes, mappings, and startup servlet</td></tr>
+<tr><td>Build configuration</td><td>Gradle</td><td><code>build.gradle</code></td><td>Declares dependencies and WAR packaging</td></tr>
+</tbody></table></div>
+<h2 id="build-profiles">Build Profiles</h2>
+<div class="table-wrap"><table><thead><tr>
+<th>Profile</th><th>Activation</th><th>Purpose</th><th>Key Dependencies/Plugins</th>
+</tr></thead><tbody>
+<tr><td>Default build</td><td>Automatic</td><td>Compiles Java sources and packages a WAR</td><td><code>java</code> plugin, <code>war</code> plugin</td></tr>
+</tbody></table></div>
+<p>No additional Maven or Gradle profiles were detected.</p>
+<h2 id="runtime-profiles">Runtime Profiles</h2>
+<div class="table-wrap"><table><thead><tr>
+<th>Profile</th><th>Activation Method</th><th>Config Files</th><th>Key Overrides</th>
+</tr></thead><tbody>
+<tr><td>Default runtime</td><td>Automatic</td><td><code>loan-origination.properties</code></td><td>Database host, port, name, user, password, service base URLs, default interest rate</td></tr>
+<tr><td>Container runtime</td><td>Environment variables</td><td>Dockerfile <code>ENV</code> values</td><td>Overrides <code>DB_*</code>, <code>KYC_SERVICE_BASE_URL</code>, <code>RISK_SERVICE_BASE_URL</code>, <code>LEDGER_SERVICE_BASE_URL</code></td></tr>
+</tbody></table></div>
+<p>No named Spring or Jakarta runtime profiles were detected.</p>
+<h2 id="properties-inventory">Properties Inventory</h2>
+<div class="table-wrap"><table><thead><tr>
+<th>Property Key</th><th>Default</th><th>Profiles</th><th>Source</th>
+</tr></thead><tbody>
+<tr><td><code>db.host</code></td><td><code>sqlserver</code></td><td>Default, container override</td><td>Properties file or <code>DB_HOST</code></td></tr>
+<tr><td><code>db.port</code></td><td><code>1433</code></td><td>Default, container override</td><td>Properties file or <code>DB_PORT</code></td></tr>
+<tr><td><code>db.name</code></td><td><code>ZavaBankDB</code></td><td>Default, container override</td><td>Properties file or <code>DB_NAME</code></td></tr>
+<tr><td><code>db.user</code></td><td><code>sa</code></td><td>Default, container override</td><td>Properties file or <code>DB_USER</code></td></tr>
+<tr><td><code>db.password</code></td><td><code>[MASKED]</code></td><td>Default, container override</td><td>Properties file or <code>DB_PASSWORD</code></td></tr>
+<tr><td><code>kyc.service.baseUrl</code></td><td><code>http://zava-kyc-service:8080</code></td><td>Default, container override</td><td>Properties file or <code>KYC_SERVICE_BASE_URL</code></td></tr>
+<tr><td><code>risk.service.baseUrl</code></td><td><code>http://zava-risk-engine:8080</code></td><td>Default, container override</td><td>Properties file or <code>RISK_SERVICE_BASE_URL</code></td></tr>
+<tr><td><code>ledger.service.baseUrl</code></td><td><code>http://zava-ledger:8080</code></td><td>Default, container override</td><td>Properties file or <code>LEDGER_SERVICE_BASE_URL</code></td></tr>
+<tr><td><code>loan.default.interestRate</code></td><td><code>0.0725</code></td><td>Default</td><td>Properties file or <code>LOAN_DEFAULT_INTEREST_RATE</code></td></tr>
+</tbody></table></div>
+<h2 id="startup-parameters-resource-requirements">Startup Parameters & Resource Requirements</h2>
+<div class="table-wrap"><table><thead><tr>
+<th>Service</th><th>JVM/Runtime Options</th><th>Memory</th><th>Instance Count</th>
+</tr></thead><tbody>
+<tr><td>Zava Loan Origination API</td><td>No JVM options or system properties declared in repository</td><td>Not specified</td><td>Not specified</td></tr>
+</tbody></table></div>
+<h2 id="startup-dependency-chain">Startup Dependency Chain</h2>
+<ol>
+<li>SQL Server must be reachable before the web application finishes startup because <code>LoanBootstrapServlet</code> creates the schema in <code>init()</code>.</li>
+<li>Tomcat hosts the WAR and exposes servlet mappings once initialization succeeds.</li>
+<li>KYC, risk, and ledger services must be reachable for the full loan-application workflow; otherwise the submission path falls back to incomplete or degraded responses.</li>
+</ol>
+<h2 id="secrets-sensitive-configuration">Secrets & Sensitive Configuration</h2>
+<div class="table-wrap"><table><thead><tr>
+<th>Secret Reference</th><th>Type</th><th>Storage (masked)</th>
+</tr></thead><tbody>
+<tr><td><code>db.password</code> / <code>DB_PASSWORD</code></td><td>Database password</td><td>Bundled properties file and Dockerfile <code>ENV</code> value <code>[MASKED]</code></td></tr>
+<tr><td>JDBC connection string</td><td>Database connection</td><td>Constructed in code; disables encryption and trusts the server certificate</td></tr>
+</tbody></table></div>
+<h3 id="secrets-provisioning-workflow">Secrets Provisioning Workflow</h3>
+<p>Secrets are provisioned through static application configuration rather than a managed secret store. The application first loads <code>loan-origination.properties</code>, then allows environment variables to override those values at runtime. No Key Vault, Vault, encrypted properties, or deployment-time secret injection workflow was detected, so the web application, database access, and downstream service integrations all depend on values that are either bundled in source or injected as plain environment variables.</p>
+<h2 id="feature-flags">Feature Flags</h2>
+<div class="table-wrap"><table><thead><tr>
+<th>Flag Name</th><th>Default</th><th>Controlled By</th>
+</tr></thead><tbody>
+<tr><td>None detected</td><td>N/A</td><td>N/A</td></tr>
+</tbody></table></div>
+<p>No conditional feature-flag framework or property-based feature toggles were detected.</p>
+<h2 id="framework-runtime-versions">Framework & Runtime Versions</h2>
+<div class="table-wrap"><table><thead><tr>
+<th>Component</th><th>Version</th><th>Source</th>
+</tr></thead><tbody>
+<tr><td>Java target</td><td>11</td><td><code>build.gradle</code></td></tr>
+<tr><td>Servlet API</td><td>4.0.1</td><td><code>build.gradle</code></td></tr>
+<tr><td>SQL Server JDBC driver</td><td>12.6.3.jre11</td><td><code>build.gradle</code></td></tr>
+<tr><td>JSON library</td><td>20140107</td><td><code>build.gradle</code></td></tr>
+<tr><td>Build image</td><td>Gradle 7.6 on JDK 11</td><td><code>Dockerfile</code></td></tr>
+<tr><td>Runtime image</td><td>Tomcat 9 on JDK 11</td><td><code>Dockerfile</code></td></tr>
+</tbody></table></div></div>
+</div>
+<div id="tab-workflows" class="tab-panel">
+  <div class="fact-content"><h1 id="core-business-workflows">Core Business Workflows</h1>
+<p>This application supports the loan-origination portion of a banking workflow by receiving a loan request, validating identity and risk with downstream services, and recording the resulting decision. Its business logic is concentrated in a small set of servlet endpoints.</p>
+<h2 id="domain-entities">Domain Entities</h2>
+<div class="table-wrap"><table><thead><tr>
+<th>Entity</th><th>Service / Bounded Context</th><th>Description</th><th>Key Relationships</th>
+</tr></thead><tbody>
+<tr><td>Loan Application</td><td>Loan Origination</td><td>Represents a customer request for a loan product and tracks lifecycle status from submission through decision</td><td>Produces one or more decision records and may reference a ledger account</td></tr>
+<tr><td>Loan Decision</td><td>Loan Origination</td><td>Captures the approval, decline, or manual-review outcome for an application</td><td>Belongs to a single loan application</td></tr>
+<tr><td>KYC Result</td><td>External KYC Context</td><td>Indicates whether identity verification passes or requires manual review</td><td>Influences whether risk scoring can proceed</td></tr>
+<tr><td>Risk Assessment</td><td>External Risk Context</td><td>Determines approval status, score, risk level, and pricing details</td><td>Drives approval and approved amount</td></tr>
+<tr><td>Ledger Account</td><td>External Ledger Context</td><td>Represents the loan account created after approval</td><td>Linked back to the loan application by account id</td></tr>
+</tbody></table></div>
+<h2 id="service-to-domain-mapping">Service-to-Domain Mapping</h2>
+<div class="table-wrap"><table><thead><tr>
+<th>Service</th><th>Domain Context</th><th>Owned Entities</th><th>External Dependencies</th>
+</tr></thead><tbody>
+<tr><td>Zava Loan Origination API</td><td>Loan Origination</td><td>Loan Application, Loan Decision</td><td>SQL Server, KYC service, Risk engine, Ledger service</td></tr>
+<tr><td>KYC Service</td><td>Identity Verification</td><td>KYC Result</td><td>Called synchronously by loan origination</td></tr>
+<tr><td>Risk Engine</td><td>Credit Decisioning</td><td>Risk Assessment</td><td>Called synchronously after KYC succeeds</td></tr>
+<tr><td>Ledger Service</td><td>Accounting</td><td>Ledger Account</td><td>Called synchronously after approval</td></tr>
+</tbody></table></div>
+<h2 id="primary-workflows">Primary Workflows</h2>
+<h3 id="workflow-1-submit-loan-application">Workflow 1: Submit loan application</h3>
+<ol>
+<li>A client sends <code>POST /api/loans/apply</code> with customer, product, amount, term, and identity data.</li>
+<li>The API validates the minimum required fields and rejects malformed or incomplete payloads with HTTP 400.</li>
+<li>The application inserts a new loan-application row in SQL Server in <code>Submitted</code> state.</li>
+<li>The service sends identity data to the KYC service.</li>
+<li>If KYC does not pass, the workflow ends in <code>KYC_REVIEW</code> and stores a manual-review style decision note.</li>
+<li>If KYC passes, the risk engine evaluates the application and returns score, risk level, approval, approved amount, and optionally pricing.</li>
+<li>If risk declines the request, the application stores a decline decision and finishes the workflow.</li>
+<li>If risk approves the request, the ledger service is asked to create a loan account.</li>
+<li>The API updates the stored application, records a decision row, commits the database transaction, and returns the outcome.</li>
+</ol>
+<h3 id="workflow-2-retrieve-application-status">Workflow 2: Retrieve application status</h3>
+<ol>
+<li>A client sends <code>GET /api/loans/{id}/status</code>.</li>
+<li>The API validates the path shape and the numeric application id.</li>
+<li>The service queries SQL Server for the matching application row.</li>
+<li>If the record exists, the API returns the persisted decision state and related details as JSON.</li>
+</ol>
+<h2 id="cross-service-data-flows">Cross-Service Data Flows</h2>
+<p>The cross-service data flow is orchestration-heavy rather than event-driven. The loan-origination API is the source of truth for loan application records and coordinates with external services in sequence: it sends applicant identity data to KYC, forwards application details to the risk engine, and finally requests loan-account creation from the ledger service when approval is granted. The final client response composes these external outcomes with local persistence state. When the KYC or risk decision prevents progression, the workflow ends early. When the ledger service does not confirm account creation, the business outcome degrades to <code>APPROVED_PENDING_LEDGER</code> rather than fully approved.</p>
+<h2 id="business-workflow-sequence">Business Workflow Sequence</h2>
+<div class="mermaid">
+sequenceDiagram
+    participant User
+    participant API as "Loan Origination API"
+    participant DB as "SQL Server"
+    participant KYC as "KYC Service"
+    participant Risk as "Risk Engine"
+    participant Ledger as "Ledger Service"
+
+    User->>API: Submit loan application
+    API->>API: Validate required fields
+    API->>DB: Store submitted application
+    DB-->>API: Application identifier
+    API->>KYC: Verify customer identity
+    KYC-->>API: PASS or REVIEW
+    alt KYC requires review
+        Note over API: Stop workflow and mark application for review
+        API->>DB: Save KYC review decision
+        DB-->>API: Persisted
+        API-->>User: KYC_REVIEW outcome
+    else KYC passes
+        API->>Risk: Score application and compute approval
+        Risk-->>API: Approval decision and pricing
+        alt Risk declines
+            API->>DB: Save decline decision
+            DB-->>API: Persisted
+            API-->>User: Declined outcome
+        else Risk approves
+            API->>Ledger: Create loan account
+            Ledger-->>API: Account created or pending
+            API->>DB: Save approval decision and account reference
+            DB-->>API: Persisted
+            API-->>User: Approved or pending-ledger outcome
+        end
+    end
+</div>
+<h2 id="business-rules-decision-logic">Business Rules & Decision Logic</h2>
+<ul>
+<li><code>customerId</code>, <code>loanProductId</code>, <code>requestedAmount</code>, and <code>termMonths</code> are mandatory for submission; invalid payloads are rejected with HTTP 400.</li>
+<li>If <code>fullName</code> is absent, the API substitutes a generated fallback name based on the customer id.</li>
+<li>KYC must return <code>PASS</code> before the risk engine is invoked.</li>
+<li>If the risk engine does not explicitly approve the request, the application is declined.</li>
+<li>If the ledger account cannot be created after approval, the workflow still records the application as <code>APPROVED_PENDING_LEDGER</code> instead of rolling back the approval result.</li>
+<li>Database writes for submission, status update, and decision audit are executed inside a single JDBC transaction in <code>LoanApplyServlet</code>.</li>
+</ul></div>
+</div>
+<div id="tab-deps" class="tab-panel">
+  <div class="fact-content"><h1 id="dependency-map">Dependency Map</h1>
+<p>This project declares three runtime dependencies in its Gradle build and packages them as a servlet-based WAR for deployment on Tomcat.</p>
+<h2 id="dependencies">Dependencies</h2>
+<div class="mermaid">
+flowchart LR
+    App["Zava Loan Origination API"]
+
+    subgraph Web["Web Frameworks"]
+        ServletApi["javax.servlet-api 4.0.1"]
+    end
+    subgraph DB["Database / ORM"]
+        SqlDriver["mssql-jdbc 12.6.3.jre11"]
+    end
+    subgraph Util["Utilities"]
+        JsonLib["org.json 20140107"]
+    end
+
+    App -->|"servlet contract"| Web
+    App -->|"database access"| DB
+    App -->|"json processing"| Util
+</div>
+<h3 id="dependency-summary">Dependency Summary</h3>
+<div class="table-wrap"><table><thead><tr>
+<th>Category</th><th>Count</th><th>Key Libraries</th><th>Notes</th>
+</tr></thead><tbody>
+<tr><td>Web Frameworks</td><td>1</td><td><code>javax.servlet-api</code></td><td>Classic servlet API dependency used by all servlet classes</td></tr>
+<tr><td>Database / ORM</td><td>1</td><td><code>mssql-jdbc</code></td><td>Direct JDBC access to SQL Server; no ORM abstraction present</td></tr>
+<tr><td>Utilities</td><td>1</td><td><code>org.json</code></td><td>Lightweight JSON parsing and serialization in request handlers</td></tr>
+</tbody></table></div>
+<h3 id="version-compatibility-risks">Version & Compatibility Risks</h3>
+<p>The project targets Java 11 and <code>javax.servlet</code> rather than newer Jakarta EE APIs, which raises migration work for modern servlet containers and current Java platform targets. The direct SQL Server JDBC dependency also means platform moves must preserve driver compatibility, connection handling, and SQL Server-specific behavior.</p>
+<h3 id="notable-observations">Notable Observations</h3>
+<ul>
+<li>The build has no test-scoped dependencies declared, which aligns with the absence of a test source tree.</li>
+<li>Packaging uses the Gradle WAR plugin, so runtime compatibility depends on an external servlet container rather than an embedded server.</li>
+<li>No dependency is present for resilience, observability, or schema migration tooling.</li>
+</ul>
+<h2 id="test-dependencies">Test Dependencies</h2>
+<div class="table-wrap"><table><thead><tr>
+<th>Framework</th><th>Version</th><th>Notes</th>
+</tr></thead><tbody>
+<tr><td>None detected</td><td>N/A</td><td>No test dependencies are declared in <code>build.gradle</code></td></tr>
+</tbody></table></div>
+<p>Total test-scope dependencies: 0</p>
+<p>No test dependencies were detected, and the repository also does not contain a Gradle wrapper or a <code>src/test</code> tree.</p></div>
+</div>
+<div id="tab-data" class="tab-panel">
+  <div class="fact-content"><h1 id="data-architecture-persistence-layer">Data Architecture & Persistence Layer</h1>
+<p>The data layer is intentionally small and centers on a SQL Server schema with two tables managed through JDBC. Persistence logic is embedded directly in servlets rather than separated into repositories or an ORM model.</p>
+<h2 id="database-configuration">Database Configuration</h2>
+<div class="table-wrap"><table><thead><tr>
+<th>Service/Module</th><th>DB Type</th><th>Profile</th><th>Driver</th><th>Connection</th><th>Migration Tool</th>
+</tr></thead><tbody>
+<tr><td>Zava Loan Origination API</td><td>SQL Server</td><td>Default</td><td><code>mssql-jdbc 12.6.3.jre11</code></td><td>JDBC URL built from <code>DB_HOST</code>, <code>DB_PORT</code>, and <code>DB_NAME</code>; encryption disabled and server certificate trusted</td><td>None</td></tr>
+</tbody></table></div>
+<h2 id="data-ownership-per-service">Data Ownership per Service</h2>
+<div class="table-wrap"><table><thead><tr>
+<th>Service</th><th>Tables Owned</th><th>ORM Framework</th><th>Caching</th><th>Notes</th>
+</tr></thead><tbody>
+<tr><td>Zava Loan Origination API</td><td><code>LoanApplications</code>, <code>LoanDecisions</code></td><td>Direct JDBC</td><td>None</td><td>Schema is created at servlet startup by <code>LoanBootstrapServlet</code></td></tr>
+</tbody></table></div>
+<h2 id="entity-model">Entity Model</h2>
+<div class="mermaid">
+erDiagram
+    LoanApplications ||--o{ LoanDecisions : "records"
+    LoanApplications {
+        int ApplicationID PK
+        int CustomerID
+        int LoanProductID
+        decimal RequestedAmount
+        decimal ApprovedAmount
+        decimal InterestRate
+        int TermMonths
+        string Purpose
+        string Status
+        datetime ApplicationDate
+        datetime DecisionDate
+        string DecisionNotes
+        int LoanAccountID
+        datetime CreatedDate
+        datetime ModifiedDate
+    }
+    LoanDecisions {
+        int DecisionID PK
+        int ApplicationID FK
+        string DecisionType
+        string DecisionBy
+        datetime DecisionDate
+        string Reason
+        int CreditScoreAtTime
+        string RiskLevel
+        string Conditions
+    }
+</div>
+<h2 id="key-repository-methods">Key Repository Methods</h2>
+<div class="table-wrap"><table><thead><tr>
+<th>Service</th><th>Repository</th><th>Notable Methods</th><th>Purpose</th>
+</tr></thead><tbody>
+<tr><td>Zava Loan Origination API</td><td><code>LoanApplyServlet</code></td><td><code>insertApplication(...)</code>, <code>updateApplication(...)</code>, <code>insertDecision(...)</code></td><td>Persists the initial submission and the final decision outcome</td></tr>
+<tr><td>Zava Loan Origination API</td><td><code>LoanStatusServlet</code></td><td>Inline <code>SELECT ... FROM LoanApplications WHERE ApplicationID = ?</code></td><td>Loads the persisted status projection for a single application</td></tr>
+<tr><td>Zava Loan Origination API</td><td><code>LoanBootstrapServlet</code></td><td>Inline DDL for <code>LoanApplications</code> and <code>LoanDecisions</code></td><td>Ensures required tables exist during application startup</td></tr>
+</tbody></table></div>
+<h2 id="caching-strategy">Caching Strategy</h2>
+<p>No caching layer was detected. Every status lookup and loan submission interacts directly with SQL Server, and no in-memory, distributed, or annotation-driven cache configuration exists in the repository.</p>
+<h2 id="data-ownership-boundaries">Data Ownership Boundaries</h2>
+<p>The application owns a single local SQL Server schema and does not share direct database access with other services in the repository. Cross-service coordination happens through synchronous HTTP calls to KYC, risk, and ledger systems rather than shared tables or batch query APIs. There is no CQRS separation; request processing mixes reads, writes, and external orchestration inside the same servlet flow.</p>
+<h3 id="data-classification-sensitivity">Data Classification & Sensitivity</h3>
+<div class="table-wrap"><table><thead><tr>
+<th>Entity</th><th>Sensitive Fields</th><th>Classification (PII/PHI/PCI/None)</th><th>Controls in Place</th>
+</tr></thead><tbody>
+<tr><td><code>LoanApplications</code></td><td><code>Purpose</code>, <code>DecisionNotes</code>, <code>RequestedAmount</code>, <code>ApprovedAmount</code></td><td>Confidential financial workflow data</td><td>No field-level protection or masking detected in code</td></tr>
+<tr><td><code>LoanDecisions</code></td><td><code>Reason</code>, <code>CreditScoreAtTime</code>, <code>RiskLevel</code>, <code>Conditions</code></td><td>Confidential financial decision data</td><td>No encryption-at-rest or masking controls detected in the repository</td></tr>
+</tbody></table></div>
+<p>The API forwards <code>fullName</code> and <code>idNumber</code> to the KYC service, but those fields are not persisted in the local tables shown above.</p></div>
+</div>
+<p class="footer">Your feedback is invaluable &mdash; <a href="https://aka.ms/ghcp-appmod/feedback">Share feedback</a></p>
+<script>
+function toggleRow(rowId, triggerRow) {
+  var detail = document.getElementById(rowId);
+  var btn = document.getElementById('btn-' + rowId);
+  if (!detail) return;
+  var visible = detail.style.display !== 'none';
+  detail.style.display = visible ? 'none' : 'table-row';
+  if (btn) btn.classList.toggle('open', !visible);
+}
+(function() {
+  var nav = document.querySelector('.tab-nav');
+  if (!nav) return;
+  nav.addEventListener('click', function(e) {
+    var btn = e.target.closest('.tab-btn');
+    if (!btn) return;
+    var targetId = btn.getAttribute('data-tab');
+    document.querySelectorAll('.tab-btn').forEach(function(b) { b.classList.remove('active'); });
+    document.querySelectorAll('.tab-panel').forEach(function(p) { p.classList.remove('active'); });
+    btn.classList.add('active');
+    var panel = document.getElementById(targetId);
+    if (panel) {
+      panel.classList.add('active');
+      if (window.__mermaidReady) { window.__renderMermaidIn(panel); }
+    }
+  });
+})();
+
+// ── Diagram lightbox ────────────────────────────────────────
+(function() {
+  var lightbox = document.getElementById('diagram-lightbox');
+  var inner = document.getElementById('diagram-lightbox-inner');
+  var closeBtn = document.getElementById('diagram-lightbox-close');
+  if (!lightbox || !inner || !closeBtn) return;
+
+  var scale = 1;
+  var translateX = 0;
+  var translateY = 0;
+  var isDragging = false;
+  var dragStartX = 0;
+  var dragStartY = 0;
+
+  function applyTransform() {
+    var svg = inner.querySelector('svg');
+    if (svg) {
+      svg.style.transform = 'translate(' + translateX + 'px, ' + translateY + 'px) scale(' + scale + ')';
+      svg.style.transformOrigin = 'center center';
+      svg.style.transition = 'none';
+    }
+  }
+
+  function resetTransform() {
+    scale = 1; translateX = 0; translateY = 0;
+    applyTransform();
+  }
+
+  function openLightbox(svgEl) {
+    inner.innerHTML = svgEl.outerHTML;
+    var injected = inner.querySelector('svg');
+    if (injected) {
+      injected.removeAttribute('width');
+      injected.removeAttribute('height');
+      injected.style.cursor = 'grab';
+    }
+    resetTransform();
+    lightbox.classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeLightbox() {
+    lightbox.classList.remove('open');
+    inner.innerHTML = '';
+    document.body.style.overflow = '';
+    resetTransform();
+  }
+
+  inner.addEventListener('wheel', function(e) {
+    e.preventDefault();
+    var delta = e.deltaY > 0 ? 0.9 : 1.1;
+    scale = Math.min(Math.max(scale * delta, 0.3), 8);
+    applyTransform();
+  }, { passive: false });
+
+  inner.addEventListener('mousedown', function(e) {
+    if (e.button !== 0) return;
+    isDragging = true;
+    dragStartX = e.clientX - translateX;
+    dragStartY = e.clientY - translateY;
+    var svg = inner.querySelector('svg');
+    if (svg) { svg.style.cursor = 'grabbing'; }
+    e.preventDefault();
+  });
+
+  document.addEventListener('mousemove', function(e) {
+    if (!isDragging) return;
+    translateX = e.clientX - dragStartX;
+    translateY = e.clientY - dragStartY;
+    applyTransform();
+  });
+
+  document.addEventListener('mouseup', function() {
+    if (!isDragging) return;
+    isDragging = false;
+    var svg = inner.querySelector('svg');
+    if (svg) { svg.style.cursor = 'grab'; }
+  });
+
+  inner.addEventListener('dblclick', function() { resetTransform(); });
+
+  document.addEventListener('click', function(e) {
+    var card = e.target.closest('.mermaid');
+    if (!card) return;
+    if (e.target.closest('.diagram-lightbox-close')) return;
+    var svg = card.querySelector('svg');
+    if (svg) { openLightbox(svg); }
+  });
+
+  closeBtn.addEventListener('click', closeLightbox);
+
+  lightbox.addEventListener('click', function(e) {
+    if (e.target === lightbox) { closeLightbox(); }
+  });
+
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') { closeLightbox(); }
+  });
+})();
+
+var _currentTarget = '';
+
+function toggleMultiSelect(id) {
+  var el = document.getElementById(id);
+  if (!el) return;
+  document.querySelectorAll('.multi-select.open').forEach(function(ms) { if (ms.id !== id) ms.classList.remove('open'); });
+  el.classList.toggle('open');
+}
+
+document.addEventListener('click', function(e) {
+  if (!e.target.closest('.multi-select')) {
+    document.querySelectorAll('.multi-select.open').forEach(function(ms) { ms.classList.remove('open'); });
+  }
+});
+
+function getMultiSelectValues(msId) {
+  var el = document.getElementById(msId);
+  if (!el) return [];
+  var checked = el.querySelectorAll('input[type=checkbox]:checked');
+  var vals = [];
+  for (var i = 0; i < checked.length; i++) vals.push(checked[i].value);
+  return vals;
+}
+
+function onMultiSelectChange(msId, label) {
+  var el = document.getElementById(msId);
+  if (!el) return;
+  var vals = getMultiSelectValues(msId);
+  var total = el.querySelectorAll('input[type=checkbox]').length;
+  var btn = el.querySelector('.multi-select-btn');
+  if (btn) {
+    btn.textContent = vals.length > 0 && vals.length < total ? label + ' (' + vals.length + ')' : label;
+  }
+  applyFilters();
+}
+
+function applyFilters() {
+  var selectedDomains = getMultiSelectValues('domain-ms');
+  var selectedCrits = getMultiSelectValues('criticality-ms');
+
+  var sections = document.querySelectorAll('.issue-section');
+  for (var i = 0; i < sections.length; i++) {
+    var domain = sections[i].getAttribute('data-domain');
+    sections[i].style.display = (selectedDomains.length === 0 || selectedDomains.indexOf(domain) >= 0) ? '' : 'none';
+  }
+
+  var rows = document.querySelectorAll('.issue-row');
+  for (var i = 0; i < rows.length; i++) {
+    var row = rows[i];
+    var section = row.closest('.issue-section');
+    if (section && section.style.display === 'none') {
+      row.style.display = 'none';
+      var next = row.nextElementSibling;
+      if (next && next.classList.contains('detail-row')) next.style.display = 'none';
+      continue;
+    }
+
+    var show = true;
+    if (_currentTarget && row.hasAttribute('data-targets')) {
+      var targetsStr = row.getAttribute('data-targets');
+      if (targetsStr && targetsStr !== '{}') {
+        try {
+          var targets = JSON.parse(targetsStr);
+          if (Object.keys(targets).length > 0 && !targets[_currentTarget]) {
+            show = false;
+          }
+        } catch(e) {}
+      }
+    }
+
+    if (show && selectedCrits.length > 0) {
+      var crit = row.getAttribute('data-criticality');
+      if (selectedCrits.indexOf(crit) < 0) show = false;
+    }
+
+    row.style.display = show ? '' : 'none';
+    var nextRow = row.nextElementSibling;
+    if (nextRow && nextRow.classList.contains('detail-row')) {
+      if (!show) nextRow.style.display = 'none';
+    }
+  }
+}
+
+function clearAllFilters() {
+  document.querySelectorAll('.multi-select input[type=checkbox]').forEach(function(cb) { cb.checked = false; });
+  var domainBtn = document.querySelector('#domain-ms .multi-select-btn');
+  if (domainBtn) domainBtn.textContent = 'Domain';
+  var critBtn = document.querySelector('#criticality-ms .multi-select-btn');
+  if (critBtn) critBtn.textContent = 'Criticality';
+  applyFilters();
+}
+
+function onTargetChange(targetId) {
+  _currentTarget = targetId;
+  var rows = document.querySelectorAll('.issue-row[data-targets]');
+  var totalEffort = 0;
+  var domainCrits = {};
+
+  for (var i = 0; i < rows.length; i++) {
+    var row = rows[i];
+    var targets = JSON.parse(row.getAttribute('data-targets'));
+    var section = row.closest('.issue-section');
+    var domain = section ? section.getAttribute('data-domain') : '';
+
+    if (!targets || Object.keys(targets).length === 0) {
+      var sp = parseFloat(row.querySelector('.sp-cell').textContent) || 0;
+      totalEffort += sp;
+      if (!domainCrits[domain]) domainCrits[domain] = {mandatory:0,potential:0,optional:0};
+      var crit = row.getAttribute('data-criticality') || 'optional';
+      domainCrits[domain][crit] = (domainCrits[domain][crit] || 0) + 1;
+      continue;
+    }
+
+    var override = targets[targetId];
+    if (!override) {
+      continue;
+    }
+
+    var newSeverity = (override.severity || row.getAttribute('data-default-severity') || '').toLowerCase();
+    row.setAttribute('data-criticality', newSeverity);
+    var critCell = row.querySelector('.crit-cell');
+    if (critCell) {
+      var critText = newSeverity === 'mandatory' ? 'Mandatory' : newSeverity === 'potential' ? 'Potential' : 'Optional';
+      var cssClass = newSeverity === 'mandatory' ? 'crit-square-mandatory' : newSeverity === 'potential' ? 'crit-square-potential' : 'crit-square-optional';
+      critCell.innerHTML = '<span class="crit-label"><span class="crit-square ' + cssClass + '"></span>' + critText + '</span>';
+    }
+
+    var newEffort = override.effort !== undefined ? override.effort : parseFloat(row.getAttribute('data-default-effort')) || 0;
+    var spCell = row.querySelector('.sp-cell');
+    if (spCell) spCell.textContent = newEffort;
+    totalEffort += newEffort;
+
+    if (!domainCrits[domain]) domainCrits[domain] = {mandatory:0,potential:0,optional:0};
+    domainCrits[domain][newSeverity] = (domainCrits[domain][newSeverity] || 0) + 1;
+  }
+
+  var secSection = document.querySelector('.issue-section[data-domain="security"]');
+  if (secSection) {
+    var secRows = secSection.querySelectorAll('.issue-row');
+    for (var j = 0; j < secRows.length; j++) {
+      if (!secRows[j].hasAttribute('data-targets') || secRows[j].getAttribute('data-targets') === '') {
+        var sp = parseFloat(secRows[j].querySelector('.sp-cell').textContent) || 0;
+        totalEffort += sp;
+        if (!domainCrits['security']) domainCrits['security'] = {mandatory:0,potential:0,optional:0};
+        var sc = secRows[j].getAttribute('data-criticality') || 'optional';
+        domainCrits['security'][sc] = (domainCrits['security'][sc] || 0) + 1;
+      }
+    }
+  }
+
+  var label = totalEffort < 20 ? 'S' : totalEffort < 50 ? 'M' : totalEffort < 100 ? 'L' : 'XL';
+  var effortEl = document.getElementById('effort-display');
+  if (effortEl) effortEl.textContent = label + ' (total story points: ' + totalEffort + ')';
+
+  updateDonuts(domainCrits);
+  applyFilters();
+}
+
+function updateDonuts(domainCrits) {
+  var container = document.getElementById('donut-container');
+  if (!container) return;
+  container.innerHTML = '';
+  var domainNames = {'cloud-readiness':'Cloud Readiness','java-upgrade':'Java Upgrade','dotnet-upgrade':'DotNET Upgrade','security':'Security'};
+  var domainOrder = ['cloud-readiness','java-upgrade','dotnet-upgrade','security'];
+  for (var d = 0; d < domainOrder.length; d++) {
+    var key = domainOrder[d];
+    var c = domainCrits[key];
+    if (!c || (c.mandatory + c.potential + c.optional) === 0) continue;
+    var total = c.mandatory + c.potential + c.optional;
+    var div = document.createElement('div');
+    div.className = 'domain-summary-item';
+    div.innerHTML = buildDonutSvg(c.mandatory, c.potential, c.optional) +
+      '<h3>' + domainNames[key] + '</h3>' +
+      '<div class="count">' + total + ' issue' + (total !== 1 ? 's' : '') + '</div>';
+    container.appendChild(div);
+  }
+}
+
+function buildDonutSvg(m, p, o) {
+  var total = m + p + o;
+  if (total === 0) return '<svg viewBox="0 0 100 100" width="100" height="100" style="display:block;margin:0 auto;"><circle cx="50" cy="50" r="35" fill="none" stroke="#d0d7de" stroke-width="15" opacity="0.5"/></svg>';
+  var r = 35, circ = 2 * Math.PI * r, offset = 0;
+  var svg = '<svg viewBox="0 0 100 100" width="100" height="100" style="display:block;margin:0 auto;transform:rotate(-90deg);">';
+  var segs = [{c:m,color:'var(--color-mandatory)'},{c:p,color:'var(--color-potential)'},{c:o,color:'var(--color-optional)'}];
+  for (var i = 0; i < segs.length; i++) {
+    if (segs[i].c === 0) continue;
+    var segLen = (segs[i].c / total) * circ;
+    var gap = total > segs[i].c ? 1.5 : 0;
+    var drawLen = Math.max(segLen - gap, 0.5);
+    svg += '<circle cx="50" cy="50" r="' + r + '" fill="none" stroke="' + segs[i].color + '" stroke-width="15" stroke-dasharray="' + drawLen.toFixed(2) + ' ' + circ.toFixed(2) + '" stroke-dashoffset="' + (-offset).toFixed(2) + '"/>';
+    offset += segLen;
+  }
+  svg += '</svg>';
+  return svg;
+}
+</script>
+<script>document.addEventListener('DOMContentLoaded', function() { onTargetChange('azure-aks'); });</script>
+</div></body></html>

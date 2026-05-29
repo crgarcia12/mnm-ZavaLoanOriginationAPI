@@ -1,0 +1,144 @@
+{
+  "metadata": {
+    "id": "20260528232335",
+    "generated_at": "2026-05-28T23:23:35.0000000Z",
+    "note": "Security-only report (AppCAT was not run or failed)"
+  },
+  "security": [
+    {
+      "id": "CVE-2023-5072",
+      "title": "Java: DoS Vulnerability in JSON-JAVA",
+      "category": "CVE",
+      "severity": "mandatory",
+      "description": "[CVE-2023-5072](https://github.com/advisories/GHSA-4jq9-2xhw-jpx7): Java: DoS Vulnerability in JSON-JAVA\n\nSeverity: HIGH\n\nA denial of service vulnerability in JSON-Java. A bug in the parser means that an input string of modest size can lead to indefinite amounts of memory being used, potentially causing OutOfMemoryError.\n\nAffected dependencies:\n  - org.json:json:20140107 (declared at build.gradle:17)\n\nVulnerable version range: <= 20230618\n\nRecommended fix:\n  - Upgrade org.json:json to 20231013 or later",
+      "evidence": {
+        "files": [
+          "build.gradle:17"
+        ],
+        "explanation": "[CVE-2023-5072](https://github.com/advisories/GHSA-4jq9-2xhw-jpx7): Java: DoS Vulnerability in JSON-JAVA\n\nSeverity: HIGH\n\nA denial of service vulnerability in JSON-Java. A bug in the parser means that an input string of modest size can lead to indefinite amounts of memory being used, potentially causing OutOfMemoryError.\n\nAffected dependencies:\n  - org.json:json:20140107 (declared at build.gradle:17)\n\nVulnerable version range: <= 20230618\n\nRecommended fix:\n  - Upgrade org.json:json to 20231013 or later"
+      },
+      "storyPoint": 1
+    },
+    {
+      "id": "CVE-2022-45688",
+      "title": "json stack overflow vulnerability",
+      "category": "CVE",
+      "severity": "mandatory",
+      "description": "[CVE-2022-45688](https://github.com/advisories/GHSA-3vqj-43w4-2q58): json stack overflow vulnerability\n\nSeverity: HIGH\n\nA stack overflow in the XML.toJSONObject component of org.json:json before version 20230227 allows attackers to cause a Denial of Service (DoS) via crafted JSON or XML data.\n\nAffected dependencies:\n  - org.json:json:20140107 (declared at build.gradle:17)\n\nVulnerable version range: < 20230227\n\nRecommended fix:\n  - Upgrade org.json:json to 20230227 or later",
+      "evidence": {
+        "files": [
+          "build.gradle:17"
+        ],
+        "explanation": "[CVE-2022-45688](https://github.com/advisories/GHSA-3vqj-43w4-2q58): json stack overflow vulnerability\n\nSeverity: HIGH\n\nA stack overflow in the XML.toJSONObject component of org.json:json before version 20230227 allows attackers to cause a Denial of Service (DoS) via crafted JSON or XML data.\n\nAffected dependencies:\n  - org.json:json:20140107 (declared at build.gradle:17)\n\nVulnerable version range: < 20230227\n\nRecommended fix:\n  - Upgrade org.json:json to 20230227 or later"
+      },
+      "storyPoint": 1
+    },
+    {
+      "id": "CWE-477",
+      "title": "Use of Obsolete Function",
+      "category": "Code Quality",
+      "severity": "optional",
+      "description": "The code uses deprecated or obsolete functions, which suggests that the code has not been actively reviewed or maintained.",
+      "evidence": {
+        "files": [
+          "src/main/java/com/zavabank/loanorigination/LoanConnectionFactory.java"
+        ],
+        "explanation": "In LoanConnectionFactory (line 10), Class.forName(\"com.microsoft.sqlserver.jdbc.SQLServerDriver\") is used to explicitly load the JDBC driver. This pattern has been obsolete since JDBC 4.0 (Java SE 6), which introduced automatic driver loading via java.util.ServiceLoader. The explicit Class.forName() call is no longer required and indicates unmaintained code."
+      },
+      "storyPoint": 1
+    },
+    {
+      "id": "CWE-681",
+      "title": "Incorrect Conversion between Numeric Types",
+      "category": "Code Quality",
+      "severity": "potential",
+      "description": "When converting from one data type to another, such as long to integer, data can be omitted or translated in a way that produces unexpected values. If the resulting values are used in a sensitive context, then dangerous behaviors may occur.",
+      "evidence": {
+        "files": [
+          "src/main/java/com/zavabank/loanorigination/LoanApplyServlet.java"
+        ],
+        "explanation": "In LoanApplyServlet.doPost() (line 37), a double value obtained via payload.optDouble(\"requestedAmount\", 0d) is directly converted to BigDecimal using new BigDecimal(double). IEEE 754 floating-point representation can cause imprecision (e.g., 123.45 may become 123.4499999999...). For financial loan amounts, this conversion may produce incorrect monetary values in database records and downstream decisions."
+      },
+      "storyPoint": 3
+    },
+    {
+      "id": "CWE-789",
+      "title": "Memory Allocation with Excessive Size Value",
+      "category": "Code Quality",
+      "severity": "potential",
+      "description": "The product allocates memory based on an untrusted, large size value, but it does not ensure that the size is within expected limits, allowing arbitrary amounts of memory to be allocated.",
+      "evidence": {
+        "files": [
+          "src/main/java/com/zavabank/loanorigination/LoanApplyServlet.java"
+        ],
+        "explanation": "In LoanApplyServlet.readBody() (lines 296-305), the method reads the entire HTTP request body into a StringBuilder without enforcing any maximum size limit. An attacker can send an arbitrarily large request body, causing unbounded memory allocation and potential heap exhaustion (denial of service). There is no check on Content-Length or total bytes read before accumulating all lines into memory."
+      },
+      "storyPoint": 5
+    },
+    {
+      "id": "CWE-259",
+      "title": "Use of Hard-coded Password",
+      "category": "Credentials & Secrets",
+      "severity": "optional",
+      "description": "The product contains a hard-coded password, which it uses for its own inbound authentication or for outbound communication to external components.",
+      "evidence": {
+        "files": [
+          "src/main/resources/loan-origination.properties"
+        ],
+        "explanation": "In loan-origination.properties (line 5), the database password is hard-coded. This properties file is bundled into the WAR artifact and deployed to the server, exposing the database password to anyone with access to the deployment package or the application classpath."
+      },
+      "storyPoint": 5
+    },
+    {
+      "id": "CWE-778",
+      "title": "Insufficient Logging",
+      "category": "Credentials & Secrets",
+      "severity": "potential",
+      "description": "When a security-critical event occurs, the product either does not record the event or omits important details about the event when logging it.",
+      "evidence": {
+        "files": [
+          "src/main/java/com/zavabank/loanorigination/LoanApplyServlet.java",
+          "src/main/java/com/zavabank/loanorigination/LoanStatusServlet.java"
+        ],
+        "explanation": "The application has no logging framework (no SLF4J, Log4j, or java.util.logging imports) across any servlet. Security-critical events such as loan application submissions, KYC verification results, risk scoring decisions, loan approvals/declines, and database errors are handled silently. This makes security incident detection and audit trail impossible."
+      },
+      "storyPoint": 3
+    },
+    {
+      "id": "CWE-798",
+      "title": "Use of Hard-coded Credentials",
+      "category": "Credentials & Secrets",
+      "severity": "optional",
+      "description": "The product contains hard-coded credentials, such as a password or cryptographic key.",
+      "evidence": {
+        "files": [
+          "src/main/resources/loan-origination.properties"
+        ],
+        "explanation": "In loan-origination.properties (lines 4-5), both the database username ('db.user=sa') and password are hard-coded. The 'sa' account is the SQL Server built-in system administrator, and using it with a hard-coded password in a properties file bundled into the deployment artifact represents a critical credential exposure risk."
+      },
+      "storyPoint": 5
+    }
+  ],
+  "rules": {},
+  "projects": [
+    {
+      "properties": {
+        "repo": "ZavaLoanOriginationAPI",
+        "appName": "ZavaLoanOriginationAPI",
+        "languages": [
+          "Java"
+        ],
+        "frameworks": [
+          "Java EE / Jakarta EE",
+          "JDBC"
+        ],
+        "tools": [
+          "Gradle"
+        ],
+        "jdkVersion": "11",
+        "applicationType": "Web Application"
+      },
+      "incidents": []
+    }
+  ]
+}

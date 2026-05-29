@@ -1,0 +1,228 @@
+{
+  "metadata": {
+    "analysisStartTime": "2026-05-29T03:36:48Z",
+    "toolVersion": "manual-best-effort-assessment",
+    "targetIds": [
+      "azure-aks"
+    ],
+    "targetDisplayNames": [
+      "Azure Kubernetes Service"
+    ]
+  },
+  "rules": {
+    "cloud-war-packaging": {
+      "title": "Servlet WAR packaging requires container runtime alignment",
+      "severity": "potential",
+      "labels": [
+        "domain=cloud-readiness"
+      ],
+      "effort": 5,
+      "description": "The application is packaged as a traditional WAR and mapped through `web.xml`, so deployments depend on an external Tomcat runtime and servlet lifecycle behavior. Moving to managed container or platform services requires validating WAR deployment, startup behavior, and servlet compatibility."
+    },
+    "cloud-direct-jdbc-bootstrap": {
+      "title": "Direct SQL Server coupling increases migration effort",
+      "severity": "potential",
+      "labels": [
+        "domain=cloud-readiness"
+      ],
+      "effort": 8,
+      "description": "Persistence uses direct JDBC statements and startup-time DDL creation instead of a migration tool or data-access abstraction. Cloud moves must preserve SQL Server connectivity, bootstrap ordering, and SQL Server specific behavior such as `GETDATE()` and identity columns."
+    },
+    "cloud-sync-service-orchestration": {
+      "title": "Synchronous downstream orchestration can create latency and resiliency risks",
+      "severity": "potential",
+      "labels": [
+        "domain=cloud-readiness"
+      ],
+      "effort": 8,
+      "description": "The loan-application flow makes sequential HTTP calls to KYC, risk, and ledger services within the request thread. Without retries, circuit breakers, or fallback logic, downstream instability directly impacts request latency and completion."
+    },
+    "java-jakarta-servlet-upgrade": {
+      "title": "Jakarta namespace migration is required for modern servlet runtimes",
+      "severity": "mandatory",
+      "labels": [
+        "domain=java-upgrade"
+      ],
+      "effort": 13,
+      "description": "The code imports `javax.servlet` APIs and targets Java 11 and Tomcat 9 style deployment. Modern Java platform and servlet runtime targets require moving to the Jakarta namespace and validating the application on a newer container and JDK."
+    }
+  },
+  "projects": [
+    {
+      "properties": {
+        "repo": "mnm-ZavaLoanOriginationAPI",
+        "appName": "Zava Loan Origination API",
+        "languages": [
+          "Java"
+        ],
+        "frameworks": [
+          "Servlet API 4.0.1",
+          "Tomcat 9 WAR"
+        ],
+        "tools": [
+          "Gradle",
+          "Docker"
+        ],
+        "jdkVersion": "11",
+        "description": "Servlet-based loan origination API backed by SQL Server and synchronous KYC, risk, and ledger integrations.",
+        "applicationType": "API",
+        "tags": [
+          "loan-origination",
+          "servlet",
+          "war"
+        ],
+        "linesOfCode": 635
+      },
+      "incidents": [
+        {
+          "ruleId": "cloud-war-packaging",
+          "location": "build.gradle",
+          "line": 2,
+          "targets": {
+            "azure-aks": {
+              "effort": 5,
+              "severity": "potential"
+            }
+          }
+        },
+        {
+          "ruleId": "cloud-war-packaging",
+          "location": "src/main/webapp/WEB-INF/web.xml",
+          "line": 1,
+          "targets": {
+            "azure-aks": {
+              "effort": 5,
+              "severity": "potential"
+            }
+          }
+        },
+        {
+          "ruleId": "cloud-direct-jdbc-bootstrap",
+          "location": "src/main/java/com/zavabank/loanorigination/LoanConnectionFactory.java",
+          "line": 19,
+          "targets": {
+            "azure-aks": {
+              "effort": 8,
+              "severity": "potential"
+            }
+          }
+        },
+        {
+          "ruleId": "cloud-direct-jdbc-bootstrap",
+          "location": "src/main/java/com/zavabank/loanorigination/LoanBootstrapServlet.java",
+          "line": 17,
+          "targets": {
+            "azure-aks": {
+              "effort": 8,
+              "severity": "potential"
+            }
+          }
+        },
+        {
+          "ruleId": "cloud-sync-service-orchestration",
+          "location": "src/main/java/com/zavabank/loanorigination/LoanApplyServlet.java",
+          "line": 114,
+          "targets": {
+            "azure-aks": {
+              "effort": 8,
+              "severity": "potential"
+            }
+          }
+        },
+        {
+          "ruleId": "cloud-sync-service-orchestration",
+          "location": "src/main/java/com/zavabank/loanorigination/LoanApplyServlet.java",
+          "line": 127,
+          "targets": {
+            "azure-aks": {
+              "effort": 8,
+              "severity": "potential"
+            }
+          }
+        },
+        {
+          "ruleId": "cloud-sync-service-orchestration",
+          "location": "src/main/java/com/zavabank/loanorigination/LoanApplyServlet.java",
+          "line": 150,
+          "targets": {
+            "azure-aks": {
+              "effort": 8,
+              "severity": "potential"
+            }
+          }
+        },
+        {
+          "ruleId": "java-jakarta-servlet-upgrade",
+          "location": "src/main/java/com/zavabank/loanorigination/LoanApplyServlet.java",
+          "line": 15,
+          "targets": {
+            "azure-aks": {
+              "effort": 13,
+              "severity": "mandatory"
+            }
+          }
+        },
+        {
+          "ruleId": "java-jakarta-servlet-upgrade",
+          "location": "src/main/java/com/zavabank/loanorigination/LoanStatusServlet.java",
+          "line": 8,
+          "targets": {
+            "azure-aks": {
+              "effort": 13,
+              "severity": "mandatory"
+            }
+          }
+        },
+        {
+          "ruleId": "java-jakarta-servlet-upgrade",
+          "location": "src/main/java/com/zavabank/loanorigination/HealthServlet.java",
+          "line": 4,
+          "targets": {
+            "azure-aks": {
+              "effort": 13,
+              "severity": "mandatory"
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "security": [
+    {
+      "id": "CWE-798",
+      "title": "Hard-coded database credentials are stored in source-controlled configuration",
+      "severity": "mandatory",
+      "storyPoint": 8,
+      "evidence": {
+        "files": [
+          "src/main/resources/loan-origination.properties",
+          "Dockerfile"
+        ]
+      }
+    },
+    {
+      "id": "CWE-319",
+      "title": "Database transport disables encryption and trusts the server certificate",
+      "severity": "mandatory",
+      "storyPoint": 5,
+      "evidence": {
+        "files": [
+          "src/main/java/com/zavabank/loanorigination/LoanOriginationConfig.java"
+        ]
+      }
+    },
+    {
+      "id": "CWE-319",
+      "title": "Downstream service endpoints use plain HTTP instead of HTTPS",
+      "severity": "potential",
+      "storyPoint": 5,
+      "evidence": {
+        "files": [
+          "src/main/resources/loan-origination.properties",
+          "Dockerfile"
+        ]
+      }
+    }
+  ],
+  "rearchitect": []
+}

@@ -1,0 +1,102 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "description": "Tasks template for modernization plan. Generate this file alongside plan.md to track individual migration tasks.",
+  "tasks": [
+    {
+      "type": "upgrade",
+      "id": "001-upgrade-java-framework-baseline",
+      "description": "Upgrade the application runtime and framework baseline to the latest supported Java framework level.",
+      "reason": "The current Java 11 + javax servlet baseline is outdated for long-term Azure modernization and supportability.",
+      "requirements": "Upgrade the project to the latest supported Java framework baseline and align application/runtime compatibility so downstream Azure modernization tasks can proceed.",
+      "successCriteria": {
+        "passBuild": "true",
+        "generateNewUnitTests": "false",
+        "passUnitTests": "true"
+      }
+    },
+    {
+      "type": "transform",
+      "id": "002-transform-secrets-to-azure-key-vault",
+      "description": "Modernize secret and sensitive configuration handling using Azure cloud-native services.",
+      "reason": "The current application relies on plaintext-style environment/property credential flow that should be modernized for secure cloud operations.",
+      "requirements": "Migrate application secrets and sensitive connection settings to Azure Key Vault using Azure-native access patterns.",
+      "dependencies": [
+        "001-upgrade-java-framework-baseline"
+      ],
+      "skills": [
+        {
+          "name": "migration-plaintext-credential-to-azure-keyvault",
+          "location": "builtin"
+        }
+      ],
+      "successCriteria": {
+        "passBuild": "true",
+        "generateNewUnitTests": "false",
+        "passUnitTests": "true"
+      }
+    },
+    {
+      "type": "transform",
+      "id": "003-transform-db-auth-to-managed-identity",
+      "description": "Modernize database connectivity to Azure-native managed identity authentication.",
+      "reason": "Cloud-native service modernization requires passwordless, identity-based access for Azure database services.",
+      "requirements": "Migrate database access authentication to Managed Identity for Azure SQL to support cloud-native security and operations.",
+      "dependencies": [
+        "001-upgrade-java-framework-baseline"
+      ],
+      "skills": [
+        {
+          "name": "migration-mi-azure-sql",
+          "location": "builtin"
+        }
+      ],
+      "successCriteria": {
+        "passBuild": "true",
+        "generateNewUnitTests": "false",
+        "passUnitTests": "true"
+      }
+    },
+    {
+      "type": "security",
+      "id": "004-security-cve-remediation",
+      "description": "Scan dependencies for known CVEs and remediate vulnerabilities before Azure deployment.",
+      "reason": "Security remediation is required to ensure the modernized workload is safe for production deployment.",
+      "requirements": "Scan all dependencies for CVEs, upgrade to patched versions, document breaking-change risk for major upgrades, and confirm build/test health after remediation.",
+      "dependencies": [
+        "002-transform-secrets-to-azure-key-vault",
+        "003-transform-db-auth-to-managed-identity"
+      ],
+      "successCriteria": {
+        "passBuild": "true",
+        "generateNewUnitTests": "false",
+        "passUnitTests": "true"
+      }
+    },
+    {
+      "type": "deployment",
+      "id": "005-deployment-azure-container-apps",
+      "description": "Deploy the modernized application to Azure Container Apps.",
+      "reason": "The project goal explicitly requires deploying the modernized application to Azure.",
+      "requirements": "Containerize and deploy the application to Azure Container Apps with production-ready runtime configuration and service connectivity.",
+      "dependencies": [
+        "004-security-cve-remediation"
+      ],
+      "skills": [
+        {
+          "name": "azcli-containerapp-deploy",
+          "location": "builtin"
+        }
+      ],
+      "targetAzureService": "Azure Container Apps",
+      "resourceStatus": "Create new service",
+      "deploymentTool": "bicep"
+    }
+  ],
+  "metadata": {
+    "planName": "plan",
+    "projectName": "ZavaLoanOriginationAPI",
+    "language": "java",
+    "createdAt": "2026-05-29T08:15:45.573Z",
+    "version": "1.0"
+  }
+}

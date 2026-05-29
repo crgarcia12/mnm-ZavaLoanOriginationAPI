@@ -1,0 +1,88 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "description": "Tasks template for modernization plan. Generate this file alongside plan.md to track individual migration tasks.",
+  "tasks": [
+    {
+      "type": "transform",
+      "id": "001-transform-plaintext-credentials-to-key-vault",
+      "description": "Migrate plaintext application credentials and secrets to Azure Key Vault-backed configuration.",
+      "reason": "The current configuration includes hardcoded credentials that increase security risk and operational overhead.",
+      "requirements": "Replace hardcoded credentials used by the application with Azure Key Vault-backed secret retrieval and configuration. Preserve existing business behavior. Addresses issues: CWE-259: Use of Hard-coded Password, CWE-798: Use of Hard-coded Credentials.",
+      "dependencies": [],
+      "skills": [
+        {
+          "name": "migration-plaintext-credential-to-azure-keyvault",
+          "location": "builtin"
+        }
+      ],
+      "successCriteria": {
+        "passBuild": "true",
+        "generateNewUnitTests": "false",
+        "passUnitTests": "true"
+      }
+    },
+    {
+      "type": "transform",
+      "id": "002-transform-sql-auth-to-managed-identity",
+      "description": "Modernize database authentication from username/password to Azure Managed Identity.",
+      "reason": "Managed identity removes credential rotation burden and aligns database access with Azure security best practices.",
+      "requirements": "Migrate database connection authentication to Azure Managed Identity for Azure SQL while maintaining current data access behavior. Remove reliance on static DB credentials in runtime configuration. Addresses issues: CWE-259: Use of Hard-coded Password, CWE-798: Use of Hard-coded Credentials.",
+      "dependencies": [
+        "001-transform-plaintext-credentials-to-key-vault"
+      ],
+      "skills": [
+        {
+          "name": "migration-mi-azure-sql",
+          "location": "builtin"
+        }
+      ],
+      "successCriteria": {
+        "passBuild": "true",
+        "generateNewUnitTests": "false",
+        "passUnitTests": "true"
+      }
+    },
+    {
+      "type": "security",
+      "id": "003-security-cve-remediation",
+      "description": "Scan and remediate known dependency CVEs before Azure deployment.",
+      "reason": "Mandatory dependency vulnerabilities must be remediated to reduce security and availability risk before release.",
+      "requirements": "Scan dependencies and remediate CVEs with minimum safe versions, documenting major-version risks when applicable. Verify build and tests after remediation. Addresses issues: CVE-2023-5072: Java: DoS Vulnerability in JSON-JAVA, CVE-2022-45688: json stack overflow vulnerability.",
+      "dependencies": [
+        "001-transform-plaintext-credentials-to-key-vault",
+        "002-transform-sql-auth-to-managed-identity"
+      ],
+      "successCriteria": {
+        "passBuild": "true",
+        "generateNewUnitTests": "false",
+        "passUnitTests": "true"
+      }
+    },
+    {
+      "type": "deployment",
+      "id": "004-deployment-azure-container-apps",
+      "description": "Containerize and deploy the modernized application to Azure Container Apps.",
+      "reason": "Azure deployment is required to complete migration and run the application in a managed cloud environment.",
+      "requirements": "Deploy the application to Azure Container Apps using an Azure-native deployment workflow. Ensure deployment configuration uses managed identity where applicable and preserves existing API behavior.",
+      "dependencies": [
+        "003-security-cve-remediation"
+      ],
+      "targetAzureService": "Azure Container Apps",
+      "resourceStatus": "create-new",
+      "deploymentTool": "bicep",
+      "skills": [
+        {
+          "name": "azcli-containerapp-deploy",
+          "location": "builtin"
+        }
+      ]
+    }
+  ],
+  "metadata": {
+    "planName": "modernization-plan",
+    "projectName": "ZavaLoanOriginationAPI",
+    "language": "java",
+    "createdAt": "2026-05-29T00:51:45.626Z",
+    "version": "1.0"
+  }
+}
